@@ -33,7 +33,6 @@ services:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
       - LITELLM_SALT_KEY=${LITELLM_SALT_KEY}
       - OLLAMA_API_KEY=${OLLAMA_API_KEY}
-      - DATABASE_URL=${DATABASE_URL}
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/litellm
     volumes:
       - ./config/litellm_config.yaml:/app/config.yaml

@@ -126,7 +126,7 @@ docker compose up -d
 
 ## Networking
 
-All services communicate over a shared Docker network named `local`. Internal service hostnames:
+All services communicate over a shared Docker network named `ai-toolkit`. Internal service hostnames:
 
 | Hostname   | Port |
 | ---------- | ---- |
