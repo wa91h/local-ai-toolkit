@@ -94,6 +94,11 @@ model_list:
       model: ollama_chat/nemotron-3-nano:30b-cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: nemotron-3-super:cloud
+    litellm_params:
+      model: ollama_chat/nemotron-3-super:cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: qwen3-next:80b-cloud
     litellm_params:
       model: ollama_chat/qwen3-next:80b-cloud
@@ -142,6 +147,11 @@ model_list:
   - model_name: minimax-m2.5:cloud
     litellm_params:
       model: ollama_chat/minimax-m2.5:cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: minimax-m2.7:cloud
+    litellm_params:
+      model: ollama_chat/minimax-m2.7:cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: glm-5:cloud
