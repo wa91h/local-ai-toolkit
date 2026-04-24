@@ -34,6 +34,11 @@ model_list:
       model: ollama_chat/gemma3:4b-cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: gemma4:31b-cloud
+    litellm_params:
+      model: ollama_chat/gemma4:31b-cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: mistral-large-3:675b-cloud
     litellm_params:
       model: ollama_chat/mistral-large-3:675b-cloud
@@ -57,6 +62,11 @@ model_list:
   - model_name: deepseek-v3.2:cloud
     litellm_params:
       model: ollama_chat/deepseek-v3.2:cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: deepseek-v4-flash:cloud
+    litellm_params:
+      model: ollama_chat/deepseek-v4-flash:cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: glm-4.6:cloud
@@ -144,6 +154,11 @@ model_list:
       model: ollama_chat/kimi-k2.5:cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: kimi-k2.6:cloud
+    litellm_params:
+      model: ollama_chat/kimi-k2.6:cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: minimax-m2.5:cloud
     litellm_params:
       model: ollama_chat/minimax-m2.5:cloud
@@ -157,6 +172,11 @@ model_list:
   - model_name: glm-5:cloud
     litellm_params:
       model: ollama_chat/glm-5:cloud
+      api_base: https://ollama.com
+      api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
+  - model_name: glm-5.1:cloud
+    litellm_params:
+      model: ollama_chat/glm-5.1:cloud
       api_base: https://ollama.com
       api_key: os.environ/OLLAMA_API_KEY # runs os.getenv("OLLAMA_API_KEY")
   - model_name: qwen3-coder-next:cloud
