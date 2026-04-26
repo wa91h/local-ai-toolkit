@@ -1,121 +1,202 @@
 # AI Local Toolkit
 
-A self-hosted AI toolkit running locally via Docker Compose, bundling an LLM gateway, workflow automation, and a chat UI — all backed by a shared PostgreSQL database.
+A self-hosted AI stack bundling an LLM gateway, workflow automation, and a chat UI — all backed by a shared PostgreSQL database. Deployable locally with Docker Compose or on any Kubernetes cluster via Helm.
 
-All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the box. Just create an Ollama account, generate an API key, and you're ready to go. Additional models and providers can be added later through LiteLLM.
+All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the box. Create an Ollama account, generate an API key, and you're ready to go.
 
-> **⚠️ Warning:** This project is intended for **local development and experimentation only**. It does not implement any security hardening (no TLS, no authentication proxy, default credentials, etc.). If you choose to deploy it in a production environment, you do so entirely at your own risk.
+> **⚠️ Warning:** This project ships without TLS or an authentication proxy. It is safe for local use and internal clusters, but should not be exposed to the public internet without adding those layers first.
 
 ## Services
 
-| Service        | Description                         | URL                      |
-| -------------- | ----------------------------------- | ------------------------ |
-| **LiteLLM**    | LLM proxy / API gateway             | http://localhost:4000    |
-| **LiteLLM UI** | Admin dashboard                     | http://localhost:4000/ui |
-| **n8n**        | Workflow automation                  | http://localhost:5678    |
-| **Open WebUI** | Chat interface for LLMs             | http://localhost:3000    |
-| **PostgreSQL** | Shared database (LiteLLM + n8n)     | `localhost:5432`         |
+| Service        | Description                          | Docker Compose URL       |
+| -------------- | ------------------------------------ | ------------------------ |
+| **LiteLLM**    | OpenAI-compatible LLM API gateway    | http://localhost:4000    |
+| **LiteLLM UI** | Admin dashboard                      | http://localhost:4000/ui |
+| **n8n**        | Visual workflow automation           | http://localhost:5678    |
+| **Open WebUI** | ChatGPT-like interface               | http://localhost:3000    |
+| **PostgreSQL** | Shared database (LiteLLM + n8n)      | `localhost:5432`         |
 
 ## Architecture
 
 ```
                     ┌─────────────┐
-                    │  Open WebUI │ :3000
+                    │  Open WebUI │
                     └──────┬──────┘
                            │ OpenAI-compatible API
                     ┌──────▼──────┐
-                    │   LiteLLM   │ :4000
+                    │   LiteLLM   │──── Ollama Cloud (37+ models)
                     └──────┬──────┘
-                    │      │
-          ┌─────────┘      └──────────────────┐
-          │ Ollama Cloud                       │ PostgreSQL
-          │ (35+ models)               ┌───────▼───────┐
-                                       │   PostgreSQL  │ :5432
-                                       └───────┬───────┘
-                                               │
-                                        ┌──────▼──────┐
-                                        │     n8n     │ :5678
-                                        └─────────────┘
+                           │
+                    ┌──────▼──────┐
+                    │  PostgreSQL │
+                    └──────┬──────┘
+                           │
+                    ┌──────▼──────┐
+                    │     n8n     │
+                    └─────────────┘
 ```
 
-All containers communicate over the shared `ai-toolkit` Docker network using internal hostnames (`postgres`, `litellm`, `n8n`, `openwebui`).
+Services communicate internally by container/pod name. Open WebUI is pre-wired to LiteLLM — no manual configuration needed.
 
 ## Prerequisites
 
-- [Docker](https://docs.docker.com/get-docker/) & [Docker Compose](https://docs.docker.com/compose/install/)
 - An [Ollama Cloud](https://ollama.com) account and API key
-- **Recommended:** 8 GB RAM minimum; 16 GB for running multiple large models simultaneously
+- **Docker Compose:** Docker Engine + Docker Compose plugin
+- **Kubernetes:** a running cluster + [Helm 3](https://helm.sh/docs/intro/install/)
 
-Create the shared Docker network (one-time):
+---
+
+## Deployment
+
+### Option A — Docker Compose (local)
+
+**1. Create the shared network** *(one-time)*
 ```bash
 docker network create ai-toolkit
 ```
 
-## Quick Start
+**2. Configure environment**
+```bash
+cp .env.dist .env
+```
+Edit `.env`:
+```dotenv
+POSTGRES_DB=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=<your_secure_password>
 
-1. **Clone the repository**
+LITELLM_MASTER_KEY=sk-<generate_a_key>
+LITELLM_SALT_KEY=sk-<generate_a_key>
+OLLAMA_API_KEY=<your_ollama_api_key>
 
-2. **Create your `.env` file**
-   ```bash
-   cp .env.dist .env
-   ```
-   Edit `.env` and fill in the required values:
-   ```dotenv
-   # Postgres
-   POSTGRES_DB=postgres
-   POSTGRES_USER=postgres
-   POSTGRES_PASSWORD=<your_secure_password>
+TZ=America/New_York   # IANA timezone
+```
 
-   # LiteLLM
-   LITELLM_MASTER_KEY=sk-<generate_a_key>
-   LITELLM_SALT_KEY=sk-<generate_a_key>
-   OLLAMA_API_KEY=<your_ollama_api_key>
+**3. Start the stack**
+```bash
+docker compose up -d
+```
 
-   # General
-   TZ=<YOUR_TIMEZONE>   # e.g. America/New_York, Europe/Paris
-   ```
+**4. Verify**
+```bash
+docker compose ps   # wait until all services show "healthy"
+```
 
-3. **Configure LiteLLM models** *(optional)*
+---
 
-   Edit `config/litellm_config.yaml` to add or modify models. The ~35 Ollama Cloud models are pre-configured.
+### Option B — Kubernetes / Helm
 
-4. **Start the stack**
-   ```bash
-   docker compose up -d
-   ```
+**1. Install the chart**
+```bash
+helm install ai-toolkit ./helm/ai-toolkit \
+  --set litellm.masterKey=sk-... \
+  --set litellm.saltKey=sk-... \
+  --set litellm.ollamaApiKey=... \
+  --set postgresql.auth.password=...
+```
 
-5. **Verify all services are healthy**
-   ```bash
-   docker compose ps
-   ```
-   Wait until all services show `healthy` before using them. Open WebUI auto-connects to LiteLLM on startup.
+For repeatable installs, use a values file instead of `--set` flags:
+```bash
+# my-values.yaml
+litellm:
+  masterKey: sk-...
+  saltKey: sk-...
+  ollamaApiKey: ...
+
+postgresql:
+  auth:
+    password: ...
+```
+```bash
+helm install ai-toolkit ./helm/ai-toolkit -f my-values.yaml
+```
+
+**2. Access services** *(without Ingress)*
+```bash
+kubectl port-forward svc/ai-toolkit-litellm 4000:4000
+kubectl port-forward svc/ai-toolkit-n8n 5678:5678
+kubectl port-forward svc/ai-toolkit-openwebui 3000:8080
+```
+
+**3. Enable Ingress** *(optional)*
+
+Add to your values file:
+```yaml
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+  hosts:
+    litellm: litellm.example.com
+    n8n: n8n.example.com
+    openwebui: chat.example.com
+  tls:
+    - secretName: ai-toolkit-tls
+      hosts:
+        - litellm.example.com
+        - n8n.example.com
+        - chat.example.com
+```
+
+**4. Use an external database** *(optional)*
+
+To disable the bundled PostgreSQL and point to your own (e.g. RDS, Cloud SQL):
+```yaml
+postgresql:
+  enabled: false
+
+externalDatabase:
+  host: my-db.example.com
+  port: 5432
+  username: postgres
+  password: ...
+  database: postgres
+```
+The external server must already have `n8n` and `litellm` databases created.
+
+**5. Disable individual services** *(optional)*
+```yaml
+n8n:
+  enabled: false   # skip n8n if you don't need workflow automation
+
+openwebui:
+  enabled: false   # skip Open WebUI if you use a different frontend
+```
+
+**Upgrade / uninstall**
+```bash
+helm upgrade ai-toolkit ./helm/ai-toolkit -f my-values.yaml
+helm uninstall ai-toolkit
+```
+
+---
 
 ## Project Structure
 
 ```
 .
-├── .env                          # Environment variables (git-ignored)
+├── docker-compose.yml            # Docker Compose stack definition
 ├── .env.dist                     # Environment variables template
-├── docker-compose.yml            # Service definitions
 ├── config/
-│   ├── init_db.sh                # Creates n8n & litellm databases on first run
-│   └── litellm_config.yaml       # LiteLLM model configuration
-└── README.md
+│   ├── litellm_config.yaml       # LiteLLM model registry (37 Ollama Cloud models)
+│   └── init_db.sh                # Creates n8n & litellm databases on first run
+├── helm/
+│   └── ai-toolkit/               # Helm chart for Kubernetes
+│       ├── Chart.yaml
+│       ├── values.yaml           # All chart defaults, fully annotated
+│       └── templates/            # K8s manifests (Deployments, Services, PVCs, …)
+└── .github/
+    └── workflows/
+        └── validate.yml          # CI: validates compose file and Helm chart
 ```
 
 ## Configuration
 
-### LiteLLM
+### Adding or updating models
 
-LiteLLM acts as a unified API gateway to multiple LLM providers. Models are configured in `config/litellm_config.yaml`. The admin UI is available at http://localhost:4000/ui.
+Append to `config/litellm_config.yaml` (Docker Compose) or override `litellm.config` in your Helm values:
 
-Authentication uses the `LITELLM_MASTER_KEY` defined in your `.env` file. Use the same key as a Bearer token when calling the API directly:
-```bash
-curl http://localhost:4000/v1/models \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
-```
-
-To add a new Ollama Cloud model, append to `config/litellm_config.yaml`:
 ```yaml
 - model_name: my-model
   litellm_params:
@@ -123,71 +204,70 @@ To add a new Ollama Cloud model, append to `config/litellm_config.yaml`:
     api_base: https://ollama.com
     api_key: os.environ/OLLAMA_API_KEY
 ```
-Then restart LiteLLM: `docker compose restart litellm`
 
-### n8n
+Docker Compose: `docker compose restart litellm`
+Kubernetes: `helm upgrade ai-toolkit ./helm/ai-toolkit -f my-values.yaml`
 
-n8n provides workflow automation with a visual editor at http://localhost:5678. It uses PostgreSQL for persistent storage.
-
-### Open WebUI
-
-Open WebUI is pre-configured to connect to LiteLLM at http://localhost:3000. No manual setup is needed — models appear automatically once LiteLLM is healthy.
-
-### PostgreSQL
-
-A single PostgreSQL 16 instance shared by LiteLLM and n8n. The `config/init_db.sh` script automatically creates the `n8n` and `litellm` databases on first initialization.
-
-> **Note:** The init script only runs when the `postgres-data` volume is created for the first time. To re-run it:
-> ```bash
-> docker compose down
-> docker volume rm toolkit_postgres-data
-> docker compose up -d
-> ```
-
-## Useful Commands
+### Calling the LiteLLM API directly
 
 ```bash
-# Start all services
-docker compose up -d
-
-# Stop all services
-docker compose down
-
-# View logs (all services)
-docker compose logs -f
-
-# View logs for a specific service
-docker compose logs -f litellm
-
-# Restart a single service after config change
-docker compose restart litellm
-
-# Reset everything (removes all data)
-docker compose down -v && docker compose up -d
+curl http://localhost:4000/v1/models \
+  -H "Authorization: Bearer $LITELLM_MASTER_KEY"
 ```
+
+### PostgreSQL databases
+
+A single PostgreSQL 16 instance hosts two databases: `n8n` and `litellm`. The `config/init_db.sh` script creates them on first startup and is idempotent (safe to re-run).
+
+To reset the database (Docker Compose):
+```bash
+docker compose down
+docker volume rm toolkit_postgres-data
+docker compose up -d
+```
+
+---
+
+## Docker Compose — Useful Commands
+
+```bash
+docker compose up -d                    # start all services
+docker compose down                     # stop all services
+docker compose ps                       # show service health
+docker compose logs -f litellm          # tail logs for one service
+docker compose restart litellm          # reload after config change
+docker compose down -v && docker compose up -d  # full reset (deletes data)
+```
+
+---
 
 ## Troubleshooting
 
 **`docker compose up` fails with "network ai-toolkit not found"**
-The external network must be created before starting the stack:
 ```bash
 docker network create ai-toolkit
 ```
 
-**Services show as `starting` or `unhealthy` for a long time**
-LiteLLM and n8n wait for Postgres to be healthy before starting. On first run, Postgres initializes its databases which can take 20–30 seconds. Check progress with:
+**Services stay `starting` or `unhealthy`**
+LiteLLM and n8n wait for Postgres to pass its healthcheck before starting. On first run, Postgres runs the init script which can take 20–30 s. Check progress:
 ```bash
 docker compose logs -f postgres
 ```
 
 **Open WebUI shows no models**
-Check that LiteLLM is healthy: `docker compose ps`. If it's running but shows no models, verify your `OLLAMA_API_KEY` in `.env` and check LiteLLM logs:
+Verify LiteLLM is healthy (`docker compose ps`) and that `OLLAMA_API_KEY` is set correctly in `.env`:
 ```bash
 docker compose logs -f litellm
 ```
 
 **n8n can't connect to the database**
-Ensure `POSTGRES_USER` and `POSTGRES_PASSWORD` in `.env` match what was used when the `postgres-data` volume was first created. If they differ, either reset the volume or revert the credentials.
+The `POSTGRES_USER` and `POSTGRES_PASSWORD` in `.env` must match what was used when the `postgres-data` volume was first created. If they changed, reset the volume or revert the credentials.
 
 **Port already in use**
-Another process is using port 4000, 5678, or 3000. Find and stop it, or change the host-side port in `docker-compose.yml` (e.g. `"4001:4000"`).
+Change the host-side port in `docker-compose.yml`, e.g. `"4001:4000"` for LiteLLM.
+
+**Helm pod stuck in `Pending`**
+The cluster likely has no default StorageClass for PVCs. Either install one or set `persistence.storageClass` in your values to an available class:
+```bash
+kubectl get storageclass
+```
