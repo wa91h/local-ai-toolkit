@@ -1,4 +1,4 @@
-{{- if .Values.n8n.persistence.enabled }}
+{{- if and .Values.n8n.enabled .Values.n8n.persistence.enabled }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

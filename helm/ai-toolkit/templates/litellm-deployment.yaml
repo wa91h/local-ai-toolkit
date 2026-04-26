@@ -1,3 +1,4 @@
+{{- if .Values.litellm.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -76,3 +77,4 @@ spec:
         - name: config
           configMap:
             name: {{ include "ai-toolkit.fullname" . }}-litellm-config
+{{- end }}

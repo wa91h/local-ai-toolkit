@@ -104,9 +104,12 @@ externalDatabase:
 # ─── LiteLLM ─────────────────────────────────────────────────────────────────
 # LiteLLM is an OpenAI-compatible API gateway that proxies requests to
 # multiple LLM providers. The admin UI is available at <host>/ui.
-# All 37 Ollama Cloud models are pre-configured in the `config` block below.
+# All Ollama Cloud models are pre-configured in the `config` block below.
 
 litellm:
+  # Set to false to skip deploying LiteLLM (e.g. if you run it outside the cluster).
+  enabled: true
+
   image:
     repository: docker.litellm.ai/berriai/litellm
     # "main-stable" tracks the latest stable release.
@@ -364,6 +367,9 @@ litellm:
 #       If you add TLS via Ingress, you can override this in the deployment template.
 
 n8n:
+  # Set to false to skip deploying n8n (e.g. if you don't need workflow automation).
+  enabled: true
+
   image:
     repository: docker.n8n.io/n8nio/n8n
     # "latest" always pulls the newest n8n release.
@@ -402,6 +408,9 @@ n8n:
 # The chat interface is available at <host>/ after deployment.
 
 openwebui:
+  # Set to false to skip deploying Open WebUI (e.g. if you use a different chat frontend).
+  enabled: true
+
   image:
     repository: ghcr.io/open-webui/open-webui
     # "main" tracks the latest build. Pin to a release tag for stability:
