@@ -1,1 +1,20 @@
-/.env
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Docker override files (local customizations)
+docker-compose.override.yml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# AI Agents/Assistants
+CLAUDE.md

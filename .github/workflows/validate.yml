@@ -1,0 +1,23 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate-compose:
+    name: Validate docker-compose.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create external network
+        run: docker network create ai-toolkit
+
+      - name: Copy env template
+        run: cp .env.dist .env
+
+      - name: Validate compose file
+        run: docker compose config --quiet
