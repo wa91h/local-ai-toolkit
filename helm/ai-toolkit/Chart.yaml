@@ -4,6 +4,9 @@ description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open 
 type: application
 version: 0.1.0
 appVersion: "0.3.0"
+home: https://github.com/wa91h/local-ai-toolkit
+sources:
+  - https://github.com/wa91h/local-ai-toolkit
 keywords:
   - ai
   - llm
@@ -11,3 +14,12 @@ keywords:
   - n8n
   - openwebui
   - ollama
+maintainers:
+  - name: wa91h
+    email: w.ourimi@gmail.com
+    url: https://github.com/wa91h
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/changes: |
+    - kind: added
+      description: Initial Helm chart release with LiteLLM, n8n, Open WebUI, and PostgreSQL
