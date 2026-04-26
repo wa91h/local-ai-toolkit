@@ -14,26 +14,23 @@ All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the
 | **LiteLLM UI** | Admin dashboard                      | http://localhost:4000/ui |
 | **n8n**        | Visual workflow automation           | http://localhost:5678    |
 | **Open WebUI** | ChatGPT-like interface               | http://localhost:3000    |
-| **PostgreSQL** | Shared database (LiteLLM + n8n)      | `localhost:5432`         |
 
 ## Architecture
 
 ```
-                    ┌─────────────┐
-                    │  Open WebUI │
-                    └──────┬──────┘
-                           │ OpenAI-compatible API
-                    ┌──────▼──────┐
-                    │   LiteLLM   │──── Ollama Cloud (37+ models)
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │  PostgreSQL │
-                    └──────┬──────┘
-                           │
-                    ┌──────▼──────┐
-                    │     n8n     │
-                    └─────────────┘
+┌─────────────┐              ┌─────────────┐
+│  Open WebUI │              │     n8n     │
+└──────┬──────┘              └──────┬──┬───┘
+       │                            │  │
+       │    OpenAI-compatible API   │  │ workflow storage
+       └─────────────┬──────────────┘  │
+                     ▼                 ▼
+              ┌────────────┐    ┌────────────┐
+              │  LiteLLM   │───▶│ PostgreSQL │
+              └─────┬──────┘    └────────────┘
+                    │
+              Ollama Cloud
+              (37+ models)
 ```
 
 Services communicate internally by container/pod name. Open WebUI is pre-wired to LiteLLM — no manual configuration needed.
