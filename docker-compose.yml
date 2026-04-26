@@ -26,6 +26,7 @@ services:
         max-file: '1'
 
   litellm:
+    profiles: [litellm]
     restart: unless-stopped
     image: docker.litellm.ai/berriai/litellm:main-stable
     container_name: litellm
@@ -57,6 +58,7 @@ services:
         max-file: '1'
 
   n8n:
+    profiles: [n8n]
     restart: unless-stopped
     image: docker.n8n.io/n8nio/n8n
     container_name: n8n
@@ -95,6 +97,7 @@ services:
         max-file: '1'
 
   openwebui:
+    profiles: [openwebui]
     restart: unless-stopped
     image: ghcr.io/open-webui/open-webui:main
     container_name: openwebui

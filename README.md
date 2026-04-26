@@ -82,6 +82,22 @@ docker compose up -d
 docker compose ps   # wait until all services show "healthy"
 ```
 
+**Disabling services** *(optional)*
+
+Edit `COMPOSE_PROFILES` in `.env` to remove services you don't need:
+```dotenv
+# All enabled (default)
+COMPOSE_PROFILES=litellm,n8n,openwebui
+
+# Without n8n
+COMPOSE_PROFILES=litellm,openwebui
+
+# LiteLLM only (no UI, no automation)
+COMPOSE_PROFILES=litellm
+```
+> Postgres always runs — it is not profile-gated since other services depend on it.
+> Disabling `litellm` requires also removing `openwebui` (it depends on LiteLLM).
+
 ---
 
 ### Option B — Kubernetes / Helm
