@@ -6,8 +6,9 @@
 # Docker override files (local customizations)
 docker-compose.override.yml
 
-# Helm downloaded dependencies
+# Helm downloaded dependencies (from helm dep update)
 helm/**/charts/*.tgz
+helm/**/Chart.lock
 
 # OS
 .DS_Store

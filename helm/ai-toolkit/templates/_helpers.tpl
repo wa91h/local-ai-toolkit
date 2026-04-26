@@ -41,7 +41,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/* PostgreSQL service host */}}
 {{- define "ai-toolkit.postgresHost" -}}
 {{- if .Values.postgresql.enabled }}
-{{- printf "%s-postgresql" .Release.Name }}
+{{- printf "%s-postgresql" (include "ai-toolkit.fullname" .) }}
 {{- else }}
 {{- required "externalDatabase.host is required when postgresql.enabled is false" .Values.externalDatabase.host }}
 {{- end }}

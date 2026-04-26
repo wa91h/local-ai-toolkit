@@ -31,9 +31,6 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@v4
 
-      - name: Fetch chart dependencies
-        run: helm dependency update helm/ai-toolkit
-
       - name: Lint chart
         run: helm lint helm/ai-toolkit
           --set litellm.masterKey=sk-test

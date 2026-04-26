@@ -4,24 +4,32 @@ fullnameOverride: ""
 # Timezone used by n8n (e.g. America/New_York, Europe/Paris)
 timezone: UTC
 
-# ─── PostgreSQL (Bitnami subchart) ───────────────────────────────────────────
+# ─── PostgreSQL ──────────────────────────────────────────────────────────────
 # Set postgresql.enabled: false and fill externalDatabase to use your own DB.
 
 postgresql:
   enabled: true
+  image:
+    repository: postgres
+    tag: "16-alpine"
+    pullPolicy: IfNotPresent
   auth:
     username: postgres
     password: ""
     database: postgres
-  primary:
-    initdb:
-      scripts:
-        init_db.sh: |
-          #!/bin/bash
-          set -e
-          psql -v ON_ERROR_STOP=1 -U postgres -c "CREATE DATABASE n8n;" || true
-          psql -v ON_ERROR_STOP=1 -U postgres -c "CREATE DATABASE litellm;" || true
-          echo "Databases created successfully"
+  service:
+    port: 5432
+  persistence:
+    enabled: true
+    size: 5Gi
+    storageClass: ""
+  resources: {}
+  initdbScript: |
+    #!/bin/bash
+    set -e
+    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE n8n;" || true
+    psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE litellm;" || true
+    echo "Databases created successfully"
 
 externalDatabase:
   host: ""
