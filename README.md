@@ -204,6 +204,28 @@ helm uninstall ai-toolkit
         └── validate.yml          # CI: validates compose file and Helm chart
 ```
 
+## Models
+
+37 Ollama Cloud models are pre-configured across 9 providers — no local GPU required.
+
+| Provider | Models |
+|---|---|
+| DeepSeek | V3.1, V3.2, V4 Flash |
+| Alibaba / Qwen | Qwen3 Coder, Qwen3 Next, Qwen3 VL, Qwen3.5, Qwen3 Coder Next |
+| Google | Gemma 3 (4B / 12B / 27B), Gemma 4, Gemini 3 Flash |
+| OpenAI | GPT-OSS (20B / 120B) |
+| Mistral | Mistral Large 3, Devstral Small 2, Ministral 3 (3B / 8B / 14B) |
+| Moonshot AI / Kimi | Kimi K2, K2 Thinking, K2.5, K2.6 |
+| MiniMax | M2, M2.1, M2.5, M2.7 |
+| Zhipu AI / Z.ai | GLM 4.6, 4.7, 5, 5.1 |
+| NVIDIA | Nemotron 3 Nano, Nemotron 3 Super |
+| Cogito | Cogito 2.1 |
+| Essential AI | RNJ-1 |
+
+See **[models.md](models.md)** for the full list with sizes and descriptions.
+
+---
+
 ## Configuration
 
 ### Adding or updating models
