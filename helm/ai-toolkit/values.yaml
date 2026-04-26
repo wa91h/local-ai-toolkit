@@ -1,29 +1,86 @@
+# ─── Release naming ──────────────────────────────────────────────────────────
+# By default, resource names are prefixed with the Helm release name.
+# e.g. a release named "prod" produces "prod-ai-toolkit-litellm", etc.
+#
+# nameOverride replaces only the chart name portion:
+#   nameOverride: "ai"  →  "prod-ai-litellm"
+#
+# fullnameOverride replaces the entire prefix:
+#   fullnameOverride: "toolkit"  →  "toolkit-litellm"
 nameOverride: ""
 fullnameOverride: ""
 
-# Timezone used by n8n (e.g. America/New_York, Europe/Paris)
+# Timezone passed to n8n for cron scheduling and log timestamps.
+# Use IANA format: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones
+# Examples: America/New_York | Europe/Paris | Asia/Tokyo | Africa/Tunis
 timezone: UTC
 
 # ─── PostgreSQL ──────────────────────────────────────────────────────────────
-# Set postgresql.enabled: false and fill externalDatabase to use your own DB.
+# A single PostgreSQL 16 instance shared by LiteLLM and n8n.
+# The initdbScript runs once on first volume creation and creates the
+# service-specific databases (n8n, litellm) inside the instance.
+#
+# To use an external database (e.g. RDS, Cloud SQL, existing cluster PG):
+#   1. Set postgresql.enabled: false
+#   2. Fill in the externalDatabase section below
+#   The external server must already have "n8n" and "litellm" databases created.
 
 postgresql:
+  # Set to false to skip deploying PostgreSQL and use externalDatabase instead.
   enabled: true
+
   image:
     repository: postgres
+    # Pinned to 16-alpine to match the Docker Compose setup.
+    # Upgrade by changing the tag — no other changes needed.
     tag: "16-alpine"
+    # IfNotPresent: use cached image if available (good for production).
+    # Always: always pull (useful when using mutable tags like "latest").
     pullPolicy: IfNotPresent
+
   auth:
+    # Superuser username created on first boot.
     username: postgres
+    # REQUIRED. Minimum 16 characters recommended.
+    # Pass at install time:  --set postgresql.auth.password=<value>
+    # Or store in a separate values file that is never committed.
     password: ""
+    # The default database created on first boot.
+    # LiteLLM and n8n each get their own database via initdbScript below.
     database: postgres
+
   service:
+    # Internal cluster port. Only change if you have a port conflict.
     port: 5432
+
   persistence:
+    # enabled: true  → data survives pod restarts (strongly recommended)
+    # enabled: false → data is lost when the pod restarts (dev/test only)
     enabled: true
+    # Size of the PersistentVolumeClaim. Increase if you expect large workflow
+    # or LiteLLM audit log data. Cannot be reduced after creation.
     size: 5Gi
+    # storageClass: ""       → use the cluster's default StorageClass
+    # storageClass: "gp2"    → AWS EBS gp2
+    # storageClass: "standard" → GKE standard persistent disk
     storageClass: ""
+
+  # CPU/memory limits and requests. Leave empty ({}) for no limits.
+  # Example for a small production workload:
+  #   resources:
+  #     requests:
+  #       cpu: 250m
+  #       memory: 256Mi
+  #     limits:
+  #       cpu: 1000m
+  #       memory: 1Gi
   resources: {}
+
+  # Shell script executed once when the PostgreSQL volume is first initialised.
+  # Creates the "n8n" and "litellm" databases inside the shared instance.
+  # $POSTGRES_USER and $POSTGRES_DB are injected automatically by the
+  # official postgres Docker image at startup.
+  # Only modify this if you need additional databases or extensions.
   initdbScript: |
     #!/bin/bash
     set -e
@@ -31,30 +88,86 @@ postgresql:
     psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE DATABASE litellm;" || true
     echo "Databases created successfully"
 
+# Settings used when postgresql.enabled is false.
+# The host must be reachable from inside the cluster (use a K8s Service name
+# or an external hostname, not "localhost").
 externalDatabase:
+  # Example: "my-postgres.default.svc.cluster.local" or "db.example.com"
   host: ""
   port: 5432
   username: postgres
   password: ""
+  # The admin/default database (used to build the connection URL).
+  # "n8n" and "litellm" databases must already exist on the server.
   database: postgres
 
 # ─── LiteLLM ─────────────────────────────────────────────────────────────────
+# LiteLLM is an OpenAI-compatible API gateway that proxies requests to
+# multiple LLM providers. The admin UI is available at <host>/ui.
+# All 37 Ollama Cloud models are pre-configured in the `config` block below.
 
 litellm:
   image:
     repository: docker.litellm.ai/berriai/litellm
+    # "main-stable" tracks the latest stable release.
+    # Pin to a specific version (e.g. "v1.40.0") for reproducible deploys.
     tag: main-stable
     pullPolicy: IfNotPresent
-  # Required — prefix with sk-
+
+  # REQUIRED. Used to authenticate every API call to LiteLLM.
+  # Must start with "sk-". Generate with: openssl rand -hex 16 | sed 's/^/sk-/'
+  # Used as the Bearer token: Authorization: Bearer <masterKey>
+  # Open WebUI is automatically configured to use this key.
   masterKey: ""
+
+  # REQUIRED. Internal salt for LiteLLM's key hashing. Must start with "sk-".
+  # Generate separately from masterKey: openssl rand -hex 16 | sed 's/^/sk-/'
+  # Never share or reuse this value across deployments.
   saltKey: ""
-  # Required — Ollama Cloud API key
+
+  # REQUIRED. Your Ollama Cloud API key.
+  # Obtain from: https://ollama.com → Account → API Keys
+  # Used by all models in the `config` block below via os.environ/OLLAMA_API_KEY.
   ollamaApiKey: ""
+
   service:
+    # ClusterIP: only reachable inside the cluster (use Ingress or port-forward).
+    # LoadBalancer: exposes a public IP (suitable for cloud environments).
+    # NodePort: exposes on a static port on every node.
     type: ClusterIP
     port: 4000
+
+  # CPU/memory limits and requests. LiteLLM is lightweight; the models run
+  # remotely on Ollama Cloud, so this pod has minimal compute requirements.
+  # Example:
+  #   resources:
+  #     requests:
+  #       cpu: 100m
+  #       memory: 256Mi
+  #     limits:
+  #       cpu: 500m
+  #       memory: 512Mi
   resources: {}
-  # Full content of litellm_config.yaml. Override in your values file to customize models.
+
+  # Full content of the LiteLLM model config (equivalent to config/litellm_config.yaml).
+  #
+  # Structure of each entry:
+  #   model_name:   display name shown in the API and Open WebUI
+  #   model:        provider/model-id — "ollama_chat/" prefix routes to Ollama Cloud
+  #   api_base:     provider endpoint
+  #   api_key:      "os.environ/VAR" tells LiteLLM to read the value from an env var
+  #
+  # To add a model, append a new entry following the same pattern.
+  # To remove models, delete their entries.
+  # To override entirely, set this key in your own values file:
+  #   litellm:
+  #     config: |
+  #       model_list:
+  #         - model_name: my-model
+  #           litellm_params:
+  #             model: ollama_chat/my-model-id
+  #             api_base: https://ollama.com
+  #             api_key: os.environ/OLLAMA_API_KEY
   config: |
     model_list:
       - model_name: deepseek-v3.1:671b-cloud
@@ -244,45 +357,142 @@ litellm:
           api_key: os.environ/OLLAMA_API_KEY
 
 # ─── n8n ─────────────────────────────────────────────────────────────────────
+# n8n is a visual workflow automation tool (similar to Zapier / Make).
+# It uses PostgreSQL for workflow and execution history storage.
+# The editor UI is available at <host>/ after deployment.
+# Note: N8N_SECURE_COOKIE is forced to false because there is no HTTPS by default.
+#       If you add TLS via Ingress, you can override this in the deployment template.
 
 n8n:
   image:
     repository: docker.n8n.io/n8nio/n8n
+    # "latest" always pulls the newest n8n release.
+    # For production, pin to a specific version: e.g. "1.45.0"
     tag: latest
     pullPolicy: IfNotPresent
+
   service:
+    # ClusterIP is recommended — expose via Ingress for external access.
     type: ClusterIP
     port: 5678
+
   persistence:
+    # Stores workflow definitions, credentials, and execution logs.
+    # Disable only for ephemeral/test environments.
     enabled: true
+    # 1Gi is sufficient for most workflows. Increase if you run many
+    # large executions or store binary data in n8n.
     size: 1Gi
     storageClass: ""
+
+  # Example resource allocation for production:
+  #   resources:
+  #     requests:
+  #       cpu: 200m
+  #       memory: 256Mi
+  #     limits:
+  #       cpu: 1000m
+  #       memory: 1Gi
   resources: {}
 
 # ─── Open WebUI ──────────────────────────────────────────────────────────────
+# Open WebUI is a ChatGPT-like interface that connects to LiteLLM.
+# It is pre-configured to point at the LiteLLM service inside the cluster
+# using the litellm.masterKey as its API key — no manual setup needed.
+# The chat interface is available at <host>/ after deployment.
 
 openwebui:
   image:
     repository: ghcr.io/open-webui/open-webui
+    # "main" tracks the latest build. Pin to a release tag for stability:
+    # e.g. "v0.3.10"
     tag: main
     pullPolicy: IfNotPresent
+
   service:
     type: ClusterIP
     port: 8080
+
   persistence:
+    # Stores user accounts, chat history, and UI settings.
+    # Disable only for stateless/demo environments.
     enabled: true
+    # 2Gi covers typical chat history. Increase if you upload many files
+    # through the Open WebUI document feature.
     size: 2Gi
     storageClass: ""
+
+  # Example resource allocation:
+  #   resources:
+  #     requests:
+  #       cpu: 100m
+  #       memory: 256Mi
+  #     limits:
+  #       cpu: 500m
+  #       memory: 512Mi
   resources: {}
 
 # ─── Ingress ─────────────────────────────────────────────────────────────────
+# Exposes services via an Ingress controller (e.g. ingress-nginx, Traefik).
+# Each service gets its own hostname. Leave a host empty to skip that service.
+# All three services share the same Ingress resource and TLS config.
+#
+# Minimal example (nginx, no TLS):
+#   ingress:
+#     enabled: true
+#     className: nginx
+#     hosts:
+#       litellm: litellm.example.com
+#       n8n: n8n.example.com
+#       openwebui: chat.example.com
+#
+# With cert-manager TLS:
+#   ingress:
+#     enabled: true
+#     className: nginx
+#     annotations:
+#       cert-manager.io/cluster-issuer: letsencrypt-prod
+#     hosts:
+#       litellm: litellm.example.com
+#       n8n: n8n.example.com
+#       openwebui: chat.example.com
+#     tls:
+#       - secretName: ai-toolkit-tls
+#         hosts:
+#           - litellm.example.com
+#           - n8n.example.com
+#           - chat.example.com
 
 ingress:
+  # Set to true to create an Ingress resource.
   enabled: false
+
+  # IngressClass to use. Depends on your cluster setup.
+  # Common values: "nginx", "traefik", "alb" (AWS)
   className: ""
+
+  # Annotations passed directly to the Ingress resource.
+  # Use these to configure controller-specific behaviour (TLS, rate limiting, etc.)
   annotations: {}
+  # Examples:
+  #   nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  #   nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+
   hosts:
+    # Hostname for the LiteLLM API + admin UI (/ui).
+    # Leave empty ("") to not expose this service via Ingress.
     litellm: ""
+    # Hostname for the n8n workflow editor.
     n8n: ""
+    # Hostname for the Open WebUI chat interface.
     openwebui: ""
+
+  # TLS configuration. Each entry maps a secret name to one or more hostnames.
+  # The secret must contain a valid TLS certificate (managed manually or by cert-manager).
   tls: []
+  # Example:
+  #   - secretName: ai-toolkit-tls
+  #     hosts:
+  #       - litellm.example.com
+  #       - n8n.example.com
+  #       - chat.example.com
