@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - "helm/**"
+      - "artifacthub-repo.yml"
 
 jobs:
   release:
@@ -33,3 +34,13 @@ jobs:
           skip_existing: true
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+
+      - name: Copy artifacthub-repo.yml to gh-pages
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          cp artifacthub-repo.yml . 2>/dev/null || git checkout main -- artifacthub-repo.yml
+          git add artifacthub-repo.yml
+          git diff --cached --quiet || git commit -m "chore: sync artifacthub-repo.yml"
+          git push origin gh-pages
+          git checkout main
