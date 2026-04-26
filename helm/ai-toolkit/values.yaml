@@ -1,0 +1,280 @@
+nameOverride: ""
+fullnameOverride: ""
+
+# Timezone used by n8n (e.g. America/New_York, Europe/Paris)
+timezone: UTC
+
+# ─── PostgreSQL (Bitnami subchart) ───────────────────────────────────────────
+# Set postgresql.enabled: false and fill externalDatabase to use your own DB.
+
+postgresql:
+  enabled: true
+  auth:
+    username: postgres
+    password: ""
+    database: postgres
+  primary:
+    initdb:
+      scripts:
+        init_db.sh: |
+          #!/bin/bash
+          set -e
+          psql -v ON_ERROR_STOP=1 -U postgres -c "CREATE DATABASE n8n;" || true
+          psql -v ON_ERROR_STOP=1 -U postgres -c "CREATE DATABASE litellm;" || true
+          echo "Databases created successfully"
+
+externalDatabase:
+  host: ""
+  port: 5432
+  username: postgres
+  password: ""
+  database: postgres
+
+# ─── LiteLLM ─────────────────────────────────────────────────────────────────
+
+litellm:
+  image:
+    repository: docker.litellm.ai/berriai/litellm
+    tag: main-stable
+    pullPolicy: IfNotPresent
+  # Required — prefix with sk-
+  masterKey: ""
+  saltKey: ""
+  # Required — Ollama Cloud API key
+  ollamaApiKey: ""
+  service:
+    type: ClusterIP
+    port: 4000
+  resources: {}
+  # Full content of litellm_config.yaml. Override in your values file to customize models.
+  config: |
+    model_list:
+      - model_name: deepseek-v3.1:671b-cloud
+        litellm_params:
+          model: ollama_chat/deepseek-v3.1:671b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3-coder:480b-cloud
+        litellm_params:
+          model: ollama_chat/qwen3-coder:480b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gpt-oss:120b-cloud
+        litellm_params:
+          model: ollama_chat/gpt-oss:120b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gpt-oss:20b-cloud
+        litellm_params:
+          model: ollama_chat/gpt-oss:20b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gemma3:27b-cloud
+        litellm_params:
+          model: ollama_chat/gemma3:27b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gemma3:12b-cloud
+        litellm_params:
+          model: ollama_chat/gemma3:12b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gemma3:4b-cloud
+        litellm_params:
+          model: ollama_chat/gemma3:4b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gemma4:31b-cloud
+        litellm_params:
+          model: ollama_chat/gemma4:31b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: mistral-large-3:675b-cloud
+        litellm_params:
+          model: ollama_chat/mistral-large-3:675b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: kimi-k2:1t-cloud
+        litellm_params:
+          model: ollama_chat/kimi-k2:1t-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: kimi-k2-thinking:cloud
+        litellm_params:
+          model: ollama_chat/kimi-k2-thinking:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: minimax-m2.1:cloud
+        litellm_params:
+          model: ollama_chat/minimax-m2.1:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: deepseek-v3.2:cloud
+        litellm_params:
+          model: ollama_chat/deepseek-v3.2:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: deepseek-v4-flash:cloud
+        litellm_params:
+          model: ollama_chat/deepseek-v4-flash:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: glm-4.6:cloud
+        litellm_params:
+          model: ollama_chat/glm-4.6:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: minimax-m2:cloud
+        litellm_params:
+          model: ollama_chat/minimax-m2:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: cogito-2.1:671b-cloud
+        litellm_params:
+          model: ollama_chat/cogito-2.1:671b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: glm-4.7:cloud
+        litellm_params:
+          model: ollama_chat/glm-4.7:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: gemini-3-flash-preview:cloud
+        litellm_params:
+          model: ollama_chat/gemini-3-flash-preview:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: devstral-small-2:24b-cloud
+        litellm_params:
+          model: ollama_chat/devstral-small-2:24b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: nemotron-3-nano:30b-cloud
+        litellm_params:
+          model: ollama_chat/nemotron-3-nano:30b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: nemotron-3-super:cloud
+        litellm_params:
+          model: ollama_chat/nemotron-3-super:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3-next:80b-cloud
+        litellm_params:
+          model: ollama_chat/qwen3-next:80b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: rnj-1:8b-cloud
+        litellm_params:
+          model: ollama_chat/rnj-1:8b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: ministral-3:14b-cloud
+        litellm_params:
+          model: ollama_chat/ministral-3:14b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: ministral-3:8b-cloud
+        litellm_params:
+          model: ollama_chat/ministral-3:8b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: ministral-3:3b-cloud
+        litellm_params:
+          model: ollama_chat/ministral-3:3b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3-vl:235b-instruct-cloud
+        litellm_params:
+          model: ollama_chat/qwen3-vl:235b-instruct-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3-vl:235b-cloud
+        litellm_params:
+          model: ollama_chat/qwen3-vl:235b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3.5:397b-cloud
+        litellm_params:
+          model: ollama_chat/qwen3.5:397b-cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: kimi-k2.5:cloud
+        litellm_params:
+          model: ollama_chat/kimi-k2.5:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: kimi-k2.6:cloud
+        litellm_params:
+          model: ollama_chat/kimi-k2.6:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: minimax-m2.5:cloud
+        litellm_params:
+          model: ollama_chat/minimax-m2.5:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: minimax-m2.7:cloud
+        litellm_params:
+          model: ollama_chat/minimax-m2.7:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: glm-5:cloud
+        litellm_params:
+          model: ollama_chat/glm-5:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: glm-5.1:cloud
+        litellm_params:
+          model: ollama_chat/glm-5.1:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      - model_name: qwen3-coder-next:cloud
+        litellm_params:
+          model: ollama_chat/qwen3-coder-next:cloud
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+
+# ─── n8n ─────────────────────────────────────────────────────────────────────
+
+n8n:
+  image:
+    repository: docker.n8n.io/n8nio/n8n
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 5678
+  persistence:
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+  resources: {}
+
+# ─── Open WebUI ──────────────────────────────────────────────────────────────
+
+openwebui:
+  image:
+    repository: ghcr.io/open-webui/open-webui
+    tag: main
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8080
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+  resources: {}
+
+# ─── Ingress ─────────────────────────────────────────────────────────────────
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    litellm: ""
+    n8n: ""
+    openwebui: ""
+  tls: []

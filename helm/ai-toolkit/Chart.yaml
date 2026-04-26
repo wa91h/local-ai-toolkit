@@ -1,0 +1,18 @@
+apiVersion: v2
+name: ai-toolkit
+description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open WebUI backed by PostgreSQL
+type: application
+version: 0.1.0
+appVersion: "0.3.0"
+keywords:
+  - ai
+  - llm
+  - litellm
+  - n8n
+  - openwebui
+  - ollama
+dependencies:
+  - name: postgresql
+    version: "15.5.2"
+    repository: https://charts.bitnami.com/bitnami
+    condition: postgresql.enabled

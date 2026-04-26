@@ -6,6 +6,9 @@
 # Docker override files (local customizations)
 docker-compose.override.yml
 
+# Helm downloaded dependencies
+helm/**/charts/*.tgz
+
 # OS
 .DS_Store
 Thumbs.db

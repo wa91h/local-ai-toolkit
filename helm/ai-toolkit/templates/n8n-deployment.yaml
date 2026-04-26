@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-n8n
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: n8n
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-toolkit.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: n8n
+  template:
+    metadata:
+      labels:
+        {{- include "ai-toolkit.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: n8n
+    spec:
+      containers:
+        - name: n8n
+          image: "{{ .Values.n8n.image.repository }}:{{ .Values.n8n.image.tag }}"
+          imagePullPolicy: {{ .Values.n8n.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 5678
+              protocol: TCP
+          env:
+            - name: GENERIC_TIMEZONE
+              value: {{ .Values.timezone | quote }}
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
+            - name: N8N_SECURE_COOKIE
+              value: "false"
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_DATABASE
+              value: n8n
+            - name: DB_POSTGRESDB_HOST
+              value: {{ include "ai-toolkit.postgresHost" . | quote }}
+            - name: DB_POSTGRESDB_PORT
+              value: {{ include "ai-toolkit.postgresPort" . | quote }}
+            - name: DB_POSTGRESDB_USER
+              value: {{ include "ai-toolkit.postgresUser" . | quote }}
+            - name: DB_POSTGRESDB_SCHEMA
+              value: public
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: postgres-password
+          volumeMounts:
+            - name: data
+              mountPath: /home/node/.n8n
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .Values.n8n.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.n8n.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "ai-toolkit.fullname" . }}-n8n
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

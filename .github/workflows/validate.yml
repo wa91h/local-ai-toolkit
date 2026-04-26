@@ -21,3 +21,29 @@ jobs:
 
       - name: Validate compose file
         run: docker compose config --quiet
+
+  validate-helm:
+    name: Validate Helm chart
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+
+      - name: Fetch chart dependencies
+        run: helm dependency update helm/ai-toolkit
+
+      - name: Lint chart
+        run: helm lint helm/ai-toolkit
+          --set litellm.masterKey=sk-test
+          --set litellm.saltKey=sk-test
+          --set litellm.ollamaApiKey=test
+          --set postgresql.auth.password=test
+
+      - name: Render templates
+        run: helm template test-release helm/ai-toolkit
+          --set litellm.masterKey=sk-test
+          --set litellm.saltKey=sk-test
+          --set litellm.ollamaApiKey=test
+          --set postgresql.auth.password=test

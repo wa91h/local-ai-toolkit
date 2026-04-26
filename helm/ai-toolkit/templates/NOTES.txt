@@ -1,0 +1,30 @@
+AI Toolkit has been deployed!
+
+Services:
+{{- if .Values.ingress.enabled }}
+  {{- if .Values.ingress.hosts.litellm }}
+  LiteLLM:    http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.hosts.litellm }}
+  LiteLLM UI: http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.hosts.litellm }}/ui
+  {{- end }}
+  {{- if .Values.ingress.hosts.n8n }}
+  n8n:        http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.hosts.n8n }}
+  {{- end }}
+  {{- if .Values.ingress.hosts.openwebui }}
+  Open WebUI: http{{ if .Values.ingress.tls }}s{{ end }}://{{ .Values.ingress.hosts.openwebui }}
+  {{- end }}
+{{- else }}
+  Use port-forward to access services locally:
+
+  kubectl port-forward svc/{{ include "ai-toolkit.fullname" . }}-litellm 4000:{{ .Values.litellm.service.port }} -n {{ .Release.Namespace }}
+  kubectl port-forward svc/{{ include "ai-toolkit.fullname" . }}-n8n 5678:{{ .Values.n8n.service.port }} -n {{ .Release.Namespace }}
+  kubectl port-forward svc/{{ include "ai-toolkit.fullname" . }}-openwebui 3000:{{ .Values.openwebui.service.port }} -n {{ .Release.Namespace }}
+
+  Then open:
+    LiteLLM:    http://localhost:4000
+    LiteLLM UI: http://localhost:4000/ui
+    n8n:        http://localhost:5678
+    Open WebUI: http://localhost:3000
+{{- end }}
+
+Check pod health:
+  kubectl get pods -n {{ .Release.Namespace }} -l app.kubernetes.io/instance={{ .Release.Name }}

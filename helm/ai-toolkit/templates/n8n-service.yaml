@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-n8n
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: n8n
+spec:
+  type: {{ .Values.n8n.service.type }}
+  ports:
+    - port: {{ .Values.n8n.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "ai-toolkit.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: n8n

@@ -1,0 +1,57 @@
+{{- if .Values.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- end }}
+  {{- if .Values.ingress.tls }}
+  tls:
+    {{- toYaml .Values.ingress.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- if .Values.ingress.hosts.litellm }}
+    - host: {{ .Values.ingress.hosts.litellm | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ai-toolkit.fullname" . }}-litellm
+                port:
+                  number: {{ .Values.litellm.service.port }}
+    {{- end }}
+    {{- if .Values.ingress.hosts.n8n }}
+    - host: {{ .Values.ingress.hosts.n8n | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ai-toolkit.fullname" . }}-n8n
+                port:
+                  number: {{ .Values.n8n.service.port }}
+    {{- end }}
+    {{- if .Values.ingress.hosts.openwebui }}
+    - host: {{ .Values.ingress.hosts.openwebui | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "ai-toolkit.fullname" . }}-openwebui
+                port:
+                  number: {{ .Values.openwebui.service.port }}
+    {{- end }}
+{{- end }}

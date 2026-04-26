@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-openwebui
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: openwebui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "ai-toolkit.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: openwebui
+  template:
+    metadata:
+      labels:
+        {{- include "ai-toolkit.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: openwebui
+    spec:
+      containers:
+        - name: openwebui
+          image: "{{ .Values.openwebui.image.repository }}:{{ .Values.openwebui.image.tag }}"
+          imagePullPolicy: {{ .Values.openwebui.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: OPENAI_API_BASE_URL
+              value: "http://{{ include "ai-toolkit.fullname" . }}-litellm:{{ .Values.litellm.service.port }}"
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: litellm-master-key
+          volumeMounts:
+            - name: data
+              mountPath: /app/backend/data
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .Values.openwebui.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      volumes:
+        - name: data
+          {{- if .Values.openwebui.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "ai-toolkit.fullname" . }}-openwebui
+          {{- else }}
+          emptyDir: {}
+          {{- end }}

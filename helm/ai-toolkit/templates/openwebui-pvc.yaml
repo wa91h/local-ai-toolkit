@@ -1,0 +1,18 @@
+{{- if .Values.openwebui.persistence.enabled }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-openwebui
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: openwebui
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.openwebui.persistence.size }}
+  {{- if .Values.openwebui.persistence.storageClass }}
+  storageClassName: {{ .Values.openwebui.persistence.storageClass }}
+  {{- end }}
+{{- end }}
