@@ -21,4 +21,5 @@ Thumbs.db
 *.swo
 
 # AI Agents/Assistants
+.claude
 CLAUDE.md
