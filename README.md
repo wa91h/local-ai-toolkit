@@ -4,7 +4,7 @@ A self-hosted AI stack bundling an LLM gateway, workflow automation, and a chat 
 
 All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the box. Create an Ollama account, generate an API key, and you're ready to go.
 
-> **⚠️ Warning:** This project ships without TLS or an authentication proxy. It is safe for local use and internal clusters, but should not be exposed to the public internet without adding those layers first.
+> **⚠️ Warning:** This project is not production-ready out of the box. It has no TLS, no authentication proxy, no secrets management, and no backup strategy. It is safe for local use and trusted internal networks. See [Production Checklist](#production-checklist) before exposing it to the internet or running it with real data.
 
 ## Services
 
@@ -271,3 +271,28 @@ The cluster likely has no default StorageClass for PVCs. Either install one or s
 ```bash
 kubectl get storageclass
 ```
+
+---
+
+## Production Checklist
+
+This stack ships with sane defaults for development and internal use. The items below are required before running it with real users or sensitive data.
+
+### Must-have
+
+| Item | How |
+|---|---|
+| **TLS** | Add cert-manager to your cluster and set `ingress.annotations` with a ClusterIssuer. All traffic is plain HTTP by default. |
+| **Authentication proxy** | Put [oauth2-proxy](https://oauth2-proxy.github.io/oauth2-proxy/) or [Authelia](https://www.authelia.com/) in front of every public-facing service. None of the services (LiteLLM UI, n8n, Open WebUI) require login by default. |
+| **Secrets management** | `.env` files and K8s Secrets store credentials in plaintext / base64. Use [External Secrets Operator](https://external-secrets.io/) with AWS Secrets Manager, GCP Secret Manager, or Vault to inject secrets at runtime. |
+| **PostgreSQL backups** | Deploy a `pg_dump` CronJob or use [Velero](https://velero.io/) for volume snapshots. There is no backup strategy included. Data loss = permanent loss of n8n workflows and LiteLLM audit logs. |
+| **Pin image tags** | `main-stable`, `latest`, and `main` are mutable — a re-pull can silently introduce a breaking change. Pin to a specific version in `values.yaml` (e.g. `tag: "v1.45.0"`) for reproducible deployments. |
+
+### Should-have
+
+| Item | How |
+|---|---|
+| **n8n secure cookies** | `N8N_SECURE_COOKIE=false` is forced because there is no HTTPS by default. Once TLS is in place, remove that override from `n8n-deployment.yaml`. |
+| **Network policies** | By default every pod can reach every other pod. Add Kubernetes NetworkPolicy resources to restrict postgres and litellm to only their direct consumers. |
+| **Resource tuning** | The default resource limits in `values.yaml` are starting points. Profile your actual workload and adjust — especially PostgreSQL memory if you have large n8n execution history. |
+| **Monitoring** | Add [Prometheus](https://prometheus.io/) + [Grafana](https://grafana.com/) to the cluster. LiteLLM exposes Prometheus metrics at `/metrics`. |

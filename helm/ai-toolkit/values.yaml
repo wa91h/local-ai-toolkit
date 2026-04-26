@@ -65,16 +65,26 @@ postgresql:
     # storageClass: "standard" → GKE standard persistent disk
     storageClass: ""
 
-  # CPU/memory limits and requests. Leave empty ({}) for no limits.
-  # Example for a small production workload:
-  #   resources:
-  #     requests:
-  #       cpu: 250m
-  #       memory: 256Mi
-  #     limits:
-  #       cpu: 1000m
-  #       memory: 1Gi
-  resources: {}
+  # CPU/memory limits and requests. Sized for a small production workload.
+  # Increase memory if you run many large workflows or have heavy audit logging.
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  # Container-level security settings applied to the PostgreSQL pod.
+  # allowPrivilegeEscalation: false — prevents the process from gaining more
+  #   privileges than its parent (blocks sudo / setuid binaries).
+  # capabilities.drop: [ALL] — removes all Linux capabilities (NET_ADMIN,
+  #   SYS_ADMIN, etc.) that a database process never needs.
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
   # Shell script executed once when the PostgreSQL volume is first initialised.
   # Creates the "n8n" and "litellm" databases inside the shared instance.
@@ -140,17 +150,21 @@ litellm:
     type: ClusterIP
     port: 4000
 
-  # CPU/memory limits and requests. LiteLLM is lightweight; the models run
-  # remotely on Ollama Cloud, so this pod has minimal compute requirements.
-  # Example:
-  #   resources:
-  #     requests:
-  #       cpu: 100m
-  #       memory: 256Mi
-  #     limits:
-  #       cpu: 500m
-  #       memory: 512Mi
-  resources: {}
+  # CPU/memory limits and requests. LiteLLM is lightweight — models run
+  # remotely on Ollama Cloud so this pod has minimal compute requirements.
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
   # Full content of the LiteLLM model config (equivalent to config/litellm_config.yaml).
   #
@@ -391,15 +405,19 @@ n8n:
     size: 1Gi
     storageClass: ""
 
-  # Example resource allocation for production:
-  #   resources:
-  #     requests:
-  #       cpu: 200m
-  #       memory: 256Mi
-  #     limits:
-  #       cpu: 1000m
-  #       memory: 1Gi
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
 # ─── Open WebUI ──────────────────────────────────────────────────────────────
 # Open WebUI is a ChatGPT-like interface that connects to LiteLLM.
@@ -431,15 +449,19 @@ openwebui:
     size: 2Gi
     storageClass: ""
 
-  # Example resource allocation:
-  #   resources:
-  #     requests:
-  #       cpu: 100m
-  #       memory: 256Mi
-  #     limits:
-  #       cpu: 500m
-  #       memory: 512Mi
-  resources: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
 
 # ─── Ingress ─────────────────────────────────────────────────────────────────
 # Exposes services via an Ingress controller (e.g. ingress-nginx, Traefik).

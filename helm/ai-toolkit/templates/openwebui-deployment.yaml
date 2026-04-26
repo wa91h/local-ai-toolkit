@@ -52,6 +52,10 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
+          {{- with .Values.openwebui.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.openwebui.resources }}
           resources:
             {{- toYaml . | nindent 12 }}

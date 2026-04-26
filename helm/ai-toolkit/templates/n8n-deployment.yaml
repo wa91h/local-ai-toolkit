@@ -72,6 +72,10 @@ spec:
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
+          {{- with .Values.n8n.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           {{- with .Values.n8n.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
