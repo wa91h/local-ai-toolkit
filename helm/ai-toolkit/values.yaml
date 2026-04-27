@@ -155,15 +155,15 @@ litellm:
     type: ClusterIP
     port: 4000
 
-  # CPU/memory limits and requests. LiteLLM is lightweight — models run
-  # remotely on Ollama Cloud so this pod has minimal compute requirements.
+  # CPU/memory limits and requests. LiteLLM loads all model configs into memory
+  # at startup — with 37 models 1Gi is the safe minimum.
   resources:
     requests:
       cpu: 100m
-      memory: 256Mi
-    limits:
-      cpu: 500m
       memory: 512Mi
+    limits:
+      cpu: 1000m
+      memory: 2Gi
 
   securityContext:
     allowPrivilegeEscalation: false
