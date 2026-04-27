@@ -1,0 +1,48 @@
+{{- if not .Values.postgresql.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-db-init
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        {{- include "ai-toolkit.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: db-init
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: db-init
+          image: postgres:16-alpine
+          command:
+            - sh
+            - -c
+            - |
+              psql -c "SELECT 1 FROM pg_database WHERE datname='n8n'" | grep -q 1 || psql -c "CREATE DATABASE n8n;"
+              psql -c "SELECT 1 FROM pg_database WHERE datname='litellm'" | grep -q 1 || psql -c "CREATE DATABASE litellm;"
+          env:
+            - name: PGHOST
+              value: {{ include "ai-toolkit.postgresHost" . | quote }}
+            - name: PGPORT
+              value: {{ include "ai-toolkit.postgresPort" . | quote }}
+            - name: PGUSER
+              value: {{ include "ai-toolkit.postgresUser" . | quote }}
+            - name: PGDATABASE
+              value: {{ include "ai-toolkit.postgresDatabase" . | quote }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: postgres-password
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+{{- end }}
