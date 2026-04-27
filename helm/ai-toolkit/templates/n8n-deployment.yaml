@@ -18,6 +18,8 @@ spec:
         {{- include "ai-toolkit.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: n8n
     spec:
+      securityContext:
+        fsGroup: 1000
       containers:
         - name: n8n
           image: "{{ .Values.n8n.image.repository }}:{{ .Values.n8n.image.tag }}"
