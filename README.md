@@ -102,6 +102,7 @@ COMPOSE_PROFILES=litellm
 **1. Install the chart**
 ```bash
 helm install ai-toolkit ./helm/ai-toolkit \
+  --namespace ai-toolkit --create-namespace \
   --set litellm.masterKey=sk-... \
   --set litellm.saltKey=sk-... \
   --set litellm.ollamaApiKey=... \
@@ -121,7 +122,9 @@ postgresql:
     password: ...
 ```
 ```bash
-helm install ai-toolkit ./helm/ai-toolkit -f my-values.yaml
+helm install ai-toolkit ./helm/ai-toolkit \
+  --namespace ai-toolkit --create-namespace \
+  -f my-values.yaml
 ```
 
 **2. Access services** *(without Ingress)*

@@ -21,6 +21,7 @@ A Helm chart for the **AI Local Toolkit** — a self-hosted AI stack bundling an
 
 ```bash
 helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit \
+  --namespace ai-toolkit --create-namespace \
   --set litellm.masterKey=sk-... \
   --set litellm.saltKey=sk-... \
   --set litellm.ollamaApiKey=... \
@@ -30,7 +31,9 @@ helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit \
 Or with a values file:
 
 ```bash
-helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit -f my-values.yaml
+helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit \
+  --namespace ai-toolkit --create-namespace \
+  -f my-values.yaml
 ```
 
 ## Parameters

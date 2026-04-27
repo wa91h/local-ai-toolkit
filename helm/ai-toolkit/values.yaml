@@ -1,3 +1,8 @@
+# ─── Namespace ───────────────────────────────────────────────────────────────
+# Helm does not support a default namespace inside the chart. Always install with:
+#   helm install ai-toolkit . --namespace ai-toolkit --create-namespace
+# Omitting --namespace deploys into the "default" namespace.
+
 # ─── Release naming ──────────────────────────────────────────────────────────
 # By default, resource names are prefixed with the Helm release name.
 # e.g. a release named "prod" produces "prod-ai-toolkit-litellm", etc.
