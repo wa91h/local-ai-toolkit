@@ -8,6 +8,36 @@ entries:
       artifacthub.io/license: MIT
     apiVersion: v2
     appVersion: 0.3.0
+    created: "2026-04-27T14:52:09.97403464Z"
+    description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open
+      WebUI backed by PostgreSQL
+    digest: 49bf94fd3c80c1134dd8d6c633267a44935c49428e1173d864e3443e4ce97e01
+    home: https://github.com/wa91h/local-ai-toolkit
+    keywords:
+    - ai
+    - llm
+    - litellm
+    - n8n
+    - openwebui
+    - ollama
+    maintainers:
+    - email: w.ourimi@gmail.com
+      name: wa91h
+      url: https://github.com/wa91h
+    name: ai-toolkit
+    sources:
+    - https://github.com/wa91h/local-ai-toolkit
+    type: application
+    urls:
+    - https://github.com/wa91h/local-ai-toolkit/releases/download/0.1.7/ai-toolkit-0.1.7.tgz
+    version: 0.1.7
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: Initial Helm chart release with LiteLLM, n8n, Open WebUI, and PostgreSQL
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.3.0
     created: "2026-04-27T14:43:32.053250505Z"
     description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open
       WebUI backed by PostgreSQL
@@ -181,4 +211,4 @@ entries:
     urls:
     - https://github.com/wa91h/local-ai-toolkit/releases/download/ai-toolkit-0.1.1/ai-toolkit-0.1.1.tgz
     version: 0.1.1
-generated: "2026-04-27T14:43:32.053274947Z"
+generated: "2026-04-27T14:52:09.974064625Z"
