@@ -1,1 +1,2 @@
 release-name-template: "{{ .Version }}"
+tag-name-template: "{{ .Version }}"
