@@ -303,4 +303,36 @@ entries:
     urls:
     - https://github.com/wa91h/local-ai-toolkit/releases/download/ai-toolkit-0.1.1/ai-toolkit-0.1.1.tgz
     version: 0.1.1
-generated: "2026-04-28T10:38:56.292994542Z"
+  - annotations:
+      artifacthub.io/changes: |
+        - kind: added
+          description: extraEnv support for n8n, LiteLLM, and Open WebUI containers
+        - kind: added
+          description: Configurable accessModes and existingClaim for all PVCs (n8n, Open WebUI, PostgreSQL)
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.3.0
+    created: "2026-04-28T10:59:52.161260725Z"
+    description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open
+      WebUI backed by PostgreSQL
+    digest: 7076ebb2a518f9a164e83433e50f7b0025db3906b6734e6646c06026d8aef450
+    home: https://github.com/wa91h/local-ai-toolkit
+    keywords:
+    - ai
+    - llm
+    - litellm
+    - n8n
+    - openwebui
+    - ollama
+    maintainers:
+    - email: w.ourimi@gmail.com
+      name: wa91h
+      url: https://github.com/wa91h
+    name: ai-toolkit
+    sources:
+    - https://github.com/wa91h/local-ai-toolkit
+    type: application
+    urls:
+    - https://github.com/wa91h/local-ai-toolkit/releases/download/0.1.0/ai-toolkit-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-04-28T10:59:52.161292985Z"
