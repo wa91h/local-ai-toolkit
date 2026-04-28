@@ -69,6 +69,13 @@ postgresql:
     # storageClass: "gp2"    → AWS EBS gp2
     # storageClass: "standard" → GKE standard persistent disk
     storageClass: ""
+    # Access mode for the PVC. PostgreSQL requires exclusive access — always
+    # use ReadWriteOnce unless your StorageClass handles concurrent mounts safely.
+    accessModes:
+      - ReadWriteOnce
+    # Provide an existing PVC name to skip PVC creation and use your own volume.
+    # When set, size/storageClass/accessModes above are ignored.
+    existingClaim: ""
 
   # CPU/memory limits and requests. Sized for a small production workload.
   # Increase memory if you run many large workflows or have heavy audit logging.
@@ -170,6 +177,19 @@ litellm:
     capabilities:
       drop:
         - ALL
+
+  # Extra environment variables injected into the LiteLLM container.
+  # Accepts the same structure as a Kubernetes env[] entry.
+  # Example:
+  #   extraEnv:
+  #     - name: LITELLM_LOG
+  #       value: DEBUG
+  #     - name: SOME_SECRET
+  #       valueFrom:
+  #         secretKeyRef:
+  #           name: my-secret
+  #           key: my-key
+  extraEnv: []
 
   # Full content of the LiteLLM model config (equivalent to config/litellm_config.yaml).
   #
@@ -409,6 +429,13 @@ n8n:
     # large executions or store binary data in n8n.
     size: 1Gi
     storageClass: ""
+    # Access mode for the PVC. ReadWriteOnce is correct for single-replica deployments.
+    # Use ReadWriteMany only if your StorageClass supports it and you run multiple replicas.
+    accessModes:
+      - ReadWriteOnce
+    # Provide an existing PVC name to skip PVC creation and use your own volume.
+    # When set, size/storageClass/accessModes above are ignored.
+    existingClaim: ""
 
   resources:
     requests:
@@ -423,6 +450,19 @@ n8n:
     capabilities:
       drop:
         - ALL
+
+  # Extra environment variables injected into the n8n container.
+  # Accepts the same structure as a Kubernetes env[] entry.
+  # Example:
+  #   extraEnv:
+  #     - name: N8N_LOG_LEVEL
+  #       value: debug
+  #     - name: SOME_SECRET
+  #       valueFrom:
+  #         secretKeyRef:
+  #           name: my-secret
+  #           key: my-key
+  extraEnv: []
 
 # ─── Open WebUI ──────────────────────────────────────────────────────────────
 # Open WebUI is a ChatGPT-like interface that connects to LiteLLM.
@@ -453,6 +493,13 @@ openwebui:
     # through the Open WebUI document feature.
     size: 2Gi
     storageClass: ""
+    # Access mode for the PVC. ReadWriteOnce is correct for single-replica deployments.
+    # Use ReadWriteMany only if your StorageClass supports it and you run multiple replicas.
+    accessModes:
+      - ReadWriteOnce
+    # Provide an existing PVC name to skip PVC creation and use your own volume.
+    # When set, size/storageClass/accessModes above are ignored.
+    existingClaim: ""
 
   resources:
     requests:
@@ -467,6 +514,19 @@ openwebui:
     capabilities:
       drop:
         - ALL
+
+  # Extra environment variables injected into the Open WebUI container.
+  # Accepts the same structure as a Kubernetes env[] entry.
+  # Example:
+  #   extraEnv:
+  #     - name: WEBUI_NAME
+  #       value: "My AI"
+  #     - name: SOME_SECRET
+  #       valueFrom:
+  #         secretKeyRef:
+  #           name: my-secret
+  #           key: my-key
+  extraEnv: []
 
 # ─── Ingress ─────────────────────────────────────────────────────────────────
 # Exposes services via an Ingress controller (e.g. ingress-nginx, Traefik).

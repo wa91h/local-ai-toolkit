@@ -1,4 +1,4 @@
-{{- if and .Values.openwebui.enabled .Values.openwebui.persistence.enabled }}
+{{- if and .Values.openwebui.enabled .Values.openwebui.persistence.enabled (not .Values.openwebui.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: openwebui
 spec:
   accessModes:
-    - ReadWriteOnce
+    {{- toYaml .Values.openwebui.persistence.accessModes | nindent 4 }}
   resources:
     requests:
       storage: {{ .Values.openwebui.persistence.size }}

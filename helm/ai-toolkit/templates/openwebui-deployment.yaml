@@ -34,6 +34,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: litellm-master-key
+            {{- with .Values.openwebui.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: data
               mountPath: /app/backend/data
@@ -65,7 +68,7 @@ spec:
         - name: data
           {{- if .Values.openwebui.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "ai-toolkit.fullname" . }}-openwebui
+            claimName: {{ .Values.openwebui.persistence.existingClaim | default (printf "%s-openwebui" (include "ai-toolkit.fullname" .)) }}
           {{- else }}
           emptyDir: {}
           {{- end }}

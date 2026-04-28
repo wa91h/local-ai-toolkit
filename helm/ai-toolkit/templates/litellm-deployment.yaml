@@ -52,6 +52,9 @@ spec:
                   key: postgres-password
             - name: DATABASE_URL
               value: "postgresql://{{ include "ai-toolkit.postgresUser" . }}:$(POSTGRES_PASSWORD)@{{ include "ai-toolkit.postgresHost" . }}:{{ include "ai-toolkit.postgresPort" . }}/litellm"
+            {{- with .Values.litellm.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: config
               mountPath: /app/config.yaml

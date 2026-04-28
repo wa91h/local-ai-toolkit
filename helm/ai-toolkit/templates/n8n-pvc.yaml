@@ -1,4 +1,4 @@
-{{- if and .Values.n8n.enabled .Values.n8n.persistence.enabled }}
+{{- if and .Values.n8n.enabled .Values.n8n.persistence.enabled (not .Values.n8n.persistence.existingClaim) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/component: n8n
 spec:
   accessModes:
-    - ReadWriteOnce
+    {{- toYaml .Values.n8n.persistence.accessModes | nindent 4 }}
   resources:
     requests:
       storage: {{ .Values.n8n.persistence.size }}

@@ -68,7 +68,7 @@ spec:
         - name: data
           {{- if .Values.postgresql.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "ai-toolkit.fullname" . }}-postgresql
+            claimName: {{ .Values.postgresql.persistence.existingClaim | default (printf "%s-postgresql" (include "ai-toolkit.fullname" .)) }}
           {{- else }}
           emptyDir: {}
           {{- end }}

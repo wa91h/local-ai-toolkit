@@ -56,6 +56,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: postgres-password
+            {{- with .Values.n8n.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
           volumeMounts:
             - name: data
               mountPath: /home/node/.n8n
@@ -86,7 +89,7 @@ spec:
         - name: data
           {{- if .Values.n8n.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: {{ include "ai-toolkit.fullname" . }}-n8n
+            claimName: {{ .Values.n8n.persistence.existingClaim | default (printf "%s-n8n" (include "ai-toolkit.fullname" .)) }}
           {{- else }}
           emptyDir: {}
           {{- end }}
