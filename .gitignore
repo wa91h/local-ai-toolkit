@@ -1,25 +1,7 @@
 # Environment
-.env
 .env.local
 .env.*.local
-
-# Docker override files (local customizations)
-docker-compose.override.yml
 
 # Helm downloaded dependencies (from helm dep update)
 helm/**/charts/*.tgz
 helm/**/Chart.lock
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Editors
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# AI Agents/Assistants
-.claude
-CLAUDE.md
