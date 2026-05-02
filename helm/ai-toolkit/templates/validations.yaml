@@ -1,0 +1,17 @@
+{{- /*
+Pre-flight validation guards. This file emits no Kubernetes resources — it
+exists only so `fail` aborts `helm install` / `helm upgrade` early with a
+clear, actionable message when values are inconsistent.
+
+Partial files (prefixed with "_") are NOT rendered, so guards must live in a
+regular template file like this one.
+*/ -}}
+
+{{- if and .Values.n8n.enabled .Values.n8n.queueMode.enabled -}}
+  {{- if and (not .Values.redis.enabled) (not .Values.externalRedis.host) -}}
+    {{- fail "\n\nn8n.queueMode.enabled=true requires a Redis backend.\nEither:\n  - set redis.enabled=true to deploy the bundled Redis, OR\n  - set externalRedis.host (and externalRedis.port / externalRedis.password as needed) to point at an existing Redis instance.\n" -}}
+  {{- end -}}
+  {{- if and .Values.redis.enabled .Values.externalRedis.host -}}
+    {{- fail "\n\nredis.enabled=true and externalRedis.host are mutually exclusive — pick one.\n  - Set redis.enabled=false to use externalRedis, OR\n  - Clear externalRedis.host to use the bundled Redis.\n" -}}
+  {{- end -}}
+{{- end -}}

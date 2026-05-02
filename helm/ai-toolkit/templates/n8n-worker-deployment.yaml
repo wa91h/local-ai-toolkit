@@ -1,0 +1,86 @@
+{{- if and .Values.n8n.enabled .Values.n8n.queueMode.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ai-toolkit.fullname" . }}-n8n-worker
+  labels:
+    {{- include "ai-toolkit.labels" . | nindent 4 }}
+    app.kubernetes.io/component: n8n-worker
+spec:
+  replicas: {{ .Values.n8n.queueMode.workers.replicas }}
+  selector:
+    matchLabels:
+      {{- include "ai-toolkit.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: n8n-worker
+  template:
+    metadata:
+      labels:
+        {{- include "ai-toolkit.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: n8n-worker
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: n8n-worker
+          image: "{{ .Values.n8n.image.repository }}:{{ .Values.n8n.image.tag }}"
+          imagePullPolicy: {{ .Values.n8n.image.pullPolicy }}
+          command: ["n8n"]
+          args:
+            - worker
+            - "--concurrency={{ .Values.n8n.queueMode.workers.concurrency }}"
+          env:
+            - name: GENERIC_TIMEZONE
+              value: {{ .Values.timezone | quote }}
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS
+              value: "true"
+            - name: N8N_RUNNERS_ENABLED
+              value: "true"
+            - name: EXECUTIONS_MODE
+              value: queue
+            - name: QUEUE_BULL_REDIS_HOST
+              value: {{ include "ai-toolkit.redisHost" . | quote }}
+            - name: QUEUE_BULL_REDIS_PORT
+              value: {{ include "ai-toolkit.redisPort" . | quote }}
+            - name: QUEUE_BULL_REDIS_DB
+              value: {{ include "ai-toolkit.redisDatabase" . | quote }}
+            {{- if include "ai-toolkit.redisHasPassword" . }}
+            - name: QUEUE_BULL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: redis-password
+            {{- end }}
+            - name: DB_TYPE
+              value: postgresdb
+            - name: DB_POSTGRESDB_DATABASE
+              value: n8n
+            - name: DB_POSTGRESDB_HOST
+              value: {{ include "ai-toolkit.postgresHost" . | quote }}
+            - name: DB_POSTGRESDB_PORT
+              value: {{ include "ai-toolkit.postgresPort" . | quote }}
+            - name: DB_POSTGRESDB_USER
+              value: {{ include "ai-toolkit.postgresUser" . | quote }}
+            - name: DB_POSTGRESDB_SCHEMA
+              value: public
+            - name: DB_POSTGRESDB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: postgres-password
+            {{- with .Values.n8n.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+            {{- with .Values.n8n.queueMode.workers.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.n8n.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.n8n.queueMode.workers.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+{{- end }}

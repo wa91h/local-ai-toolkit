@@ -464,6 +464,106 @@ n8n:
   #           key: my-key
   extraEnv: []
 
+  # Queue mode runs n8n with EXECUTIONS_MODE=queue, offloading workflow runs
+  # from the main process to one or more dedicated worker pods that consume
+  # jobs from a shared Redis (Bull) queue.
+  #
+  # Use queue mode when:
+  #   - You run many concurrent / long-running workflows
+  #   - You need horizontal scalability for executions
+  #   - You want to isolate UI responsiveness from execution load
+  #
+  # Requirements:
+  #   - A Redis instance (deploy via redis.* below, or point at externalRedis.*)
+  #   - The main n8n pod and worker pods share the same PostgreSQL database
+  #
+  # When enabled:
+  #   - The main n8n Deployment gets EXECUTIONS_MODE=queue and the QUEUE_BULL_*
+  #     env vars; it stops running executions itself and dispatches them to Redis.
+  #   - A separate `n8n worker` Deployment is created with the configured replicas.
+  queueMode:
+    enabled: false
+
+    workers:
+      # Number of worker pods. Increase to scale execution throughput horizontally.
+      replicas: 2
+      # Max parallel executions per worker pod. Total parallelism = replicas × concurrency.
+      # Tune alongside worker resources — heavier workflows need lower concurrency
+      # or larger memory limits.
+      concurrency: 10
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+      # Extra env vars applied only to worker pods (in addition to n8n.extraEnv).
+      extraEnv: []
+
+# ─── Redis ───────────────────────────────────────────────────────────────────
+# Redis is only required when n8n.queueMode.enabled is true (it backs the Bull
+# queue used by n8n workers). Leave disabled for default single-process n8n.
+#
+# To use an external Redis (e.g. ElastiCache, Memorystore, existing cluster Redis):
+#   1. Set redis.enabled: false
+#   2. Fill in the externalRedis section below
+
+redis:
+  # Set to false to skip deploying Redis. Required when n8n.queueMode.enabled is true,
+  # unless you provide externalRedis.host.
+  enabled: false
+
+  image:
+    repository: redis
+    # Pinned to 7-alpine — small footprint, supported by all n8n Bull queue versions.
+    tag: "7-alpine"
+    pullPolicy: IfNotPresent
+
+  auth:
+    # Optional password. Leave empty for no auth (only acceptable on a private cluster
+    # network). Generate with: openssl rand -hex 24
+    password: ""
+
+  service:
+    port: 6379
+
+  persistence:
+    # enabled: true  → AOF data survives pod restarts (recommended — avoids
+    #                  losing in-flight queue jobs on restart).
+    # enabled: false → in-memory only; jobs queued before a restart are lost.
+    enabled: true
+    size: 1Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+    # Provide an existing PVC name to skip PVC creation and use your own volume.
+    existingClaim: ""
+
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+
+# Settings used when redis.enabled is false and queue mode needs an external Redis.
+externalRedis:
+  # Example: "redis.default.svc.cluster.local" or "my-redis.cache.amazonaws.com"
+  host: ""
+  port: 6379
+  # Optional password. Leave empty if your external Redis has no auth.
+  password: ""
+  # Redis logical database index (0-15 on a stock Redis).
+  database: 0
+
 # ─── Open WebUI ──────────────────────────────────────────────────────────────
 # Open WebUI is a ChatGPT-like interface that connects to LiteLLM.
 # It is pre-configured to point at the LiteLLM service inside the cluster

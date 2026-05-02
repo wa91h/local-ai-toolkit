@@ -73,3 +73,39 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- .Values.externalDatabase.database }}
 {{- end }}
 {{- end }}
+
+{{/* Redis service host */}}
+{{- define "ai-toolkit.redisHost" -}}
+{{- if .Values.redis.enabled }}
+{{- printf "%s-redis" (include "ai-toolkit.fullname" .) }}
+{{- else }}
+{{- required "externalRedis.host is required when redis.enabled is false and n8n.queueMode.enabled is true" .Values.externalRedis.host }}
+{{- end }}
+{{- end }}
+
+{{/* Redis port */}}
+{{- define "ai-toolkit.redisPort" -}}
+{{- if .Values.redis.enabled }}
+{{- .Values.redis.service.port | toString }}
+{{- else }}
+{{- .Values.externalRedis.port | toString }}
+{{- end }}
+{{- end }}
+
+{{/* Redis database index (for QUEUE_BULL_REDIS_DB) */}}
+{{- define "ai-toolkit.redisDatabase" -}}
+{{- if .Values.redis.enabled }}
+{{- "0" }}
+{{- else }}
+{{- .Values.externalRedis.database | default 0 | toString }}
+{{- end }}
+{{- end }}
+
+{{/* Whether a Redis password is configured (controls whether to inject the env var) */}}
+{{- define "ai-toolkit.redisHasPassword" -}}
+{{- if .Values.redis.enabled }}
+{{- if .Values.redis.auth.password }}true{{ end }}
+{{- else }}
+{{- if .Values.externalRedis.password }}true{{ end }}
+{{- end }}
+{{- end }}

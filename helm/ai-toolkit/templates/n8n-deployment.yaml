@@ -56,6 +56,23 @@ spec:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: postgres-password
+            {{- if .Values.n8n.queueMode.enabled }}
+            - name: EXECUTIONS_MODE
+              value: queue
+            - name: QUEUE_BULL_REDIS_HOST
+              value: {{ include "ai-toolkit.redisHost" . | quote }}
+            - name: QUEUE_BULL_REDIS_PORT
+              value: {{ include "ai-toolkit.redisPort" . | quote }}
+            - name: QUEUE_BULL_REDIS_DB
+              value: {{ include "ai-toolkit.redisDatabase" . | quote }}
+            {{- if include "ai-toolkit.redisHasPassword" . }}
+            - name: QUEUE_BULL_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ai-toolkit.secretName" . }}
+                  key: redis-password
+            {{- end }}
+            {{- end }}
             {{- with .Values.n8n.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
