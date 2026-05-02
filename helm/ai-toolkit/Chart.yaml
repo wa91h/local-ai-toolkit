@@ -2,7 +2,7 @@ apiVersion: v2
 name: ai-toolkit
 description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open WebUI backed by PostgreSQL
 type: application
-version: 0.1.0
+version: 0.2.0
 appVersion: "0.3.0"
 home: https://github.com/wa91h/local-ai-toolkit
 sources:
@@ -22,6 +22,12 @@ annotations:
   artifacthub.io/license: MIT
   artifacthub.io/changes: |
     - kind: added
-      description: extraEnv support for n8n, LiteLLM, and Open WebUI containers
+      description: n8n queue mode with bundled Redis or externalRedis, plus dedicated worker Deployment
     - kind: added
-      description: Configurable accessModes and existingClaim for all PVCs (n8n, Open WebUI, PostgreSQL)
+      description: Optional Ollama Cloud model catalog via litellm.ollamaCloud.{enabled,apiKey,models}
+    - kind: added
+      description: litellm.extraModels for registering non-Ollama providers in model_list
+    - kind: added
+      description: Pre-flight validation guards for Redis backend and Ollama Cloud API key
+    - kind: changed
+      description: "Breaking — replaced litellm.ollamaApiKey with litellm.ollamaCloud.apiKey, and litellm.config with structured ollamaCloud.models + extraModels"
