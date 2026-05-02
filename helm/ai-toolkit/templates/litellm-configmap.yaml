@@ -7,5 +7,18 @@ metadata:
     {{- include "ai-toolkit.labels" . | nindent 4 }}
 data:
   config.yaml: |
-{{ .Values.litellm.config | indent 4 }}
+    model_list:
+      {{- if .Values.litellm.ollamaCloud.enabled }}
+      {{- range .Values.litellm.ollamaCloud.models }}
+      - model_name: {{ . }}
+        litellm_params:
+          model: ollama_chat/{{ . }}
+          api_base: https://ollama.com
+          api_key: os.environ/OLLAMA_API_KEY
+      {{- end }}
+      {{- end }}
+      {{- with .Values.litellm.extraModels }}
+      {{- . | nindent 6 }}
+      {{- end }}
+      {{- if and (not .Values.litellm.ollamaCloud.enabled) (not .Values.litellm.extraModels) }} []{{- end }}
 {{- end }}

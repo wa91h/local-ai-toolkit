@@ -126,7 +126,8 @@ externalDatabase:
 # ─── LiteLLM ─────────────────────────────────────────────────────────────────
 # LiteLLM is an OpenAI-compatible API gateway that proxies requests to
 # multiple LLM providers. The admin UI is available at <host>/ui.
-# All Ollama Cloud models are pre-configured in the `config` block below.
+# Models can be sourced from the bundled Ollama Cloud catalog (litellm.ollamaCloud)
+# and/or from your own raw model entries (litellm.extraModels).
 
 litellm:
   # Set to false to skip deploying LiteLLM (e.g. if you run it outside the cluster).
@@ -149,11 +150,6 @@ litellm:
   # Generate separately from masterKey: openssl rand -hex 16 | sed 's/^/sk-/'
   # Never share or reuse this value across deployments.
   saltKey: ""
-
-  # REQUIRED. Your Ollama Cloud API key.
-  # Obtain from: https://ollama.com → Account → API Keys
-  # Used by all models in the `config` block below via os.environ/OLLAMA_API_KEY.
-  ollamaApiKey: ""
 
   service:
     # ClusterIP: only reachable inside the cluster (use Ingress or port-forward).
@@ -191,212 +187,88 @@ litellm:
   #           key: my-key
   extraEnv: []
 
-  # Full content of the LiteLLM model config (equivalent to config/litellm_config.yaml).
+  # ─── Ollama Cloud model catalog ────────────────────────────────────────────
+  # When enabled, the chart:
+  #   - Adds OLLAMA_API_KEY to the shared Secret (sourced from ollamaCloud.apiKey)
+  #   - Injects OLLAMA_API_KEY into the LiteLLM container env
+  #   - Generates a model_list entry in the LiteLLM ConfigMap for every name in
+  #     ollamaCloud.models, each pointing at https://ollama.com via the
+  #     ollama_chat/<name> provider prefix.
   #
-  # Structure of each entry:
-  #   model_name:   display name shown in the API and Open WebUI
-  #   model:        provider/model-id — "ollama_chat/" prefix routes to Ollama Cloud
-  #   api_base:     provider endpoint
-  #   api_key:      "os.environ/VAR" tells LiteLLM to read the value from an env var
+  # When disabled, none of the above is created — useful if you only want to
+  # serve models from other providers (configure them via litellm.extraModels).
+  ollamaCloud:
+    enabled: true
+
+    # REQUIRED when enabled. Your Ollama Cloud API key.
+    # Obtain from: https://ollama.com → Account → API Keys
+    apiKey: ""
+
+    # List of Ollama Cloud model identifiers to expose through LiteLLM.
+    # Each entry produces a model_list block of the form:
+    #   - model_name: <name>
+    #     litellm_params:
+    #       model: ollama_chat/<name>
+    #       api_base: https://ollama.com
+    #       api_key: os.environ/OLLAMA_API_KEY
+    # Add or remove names freely; nothing else needs to change.
+    models:
+      - deepseek-v3.1:671b-cloud
+      - qwen3-coder:480b-cloud
+      - gpt-oss:120b-cloud
+      - gpt-oss:20b-cloud
+      - gemma3:27b-cloud
+      - gemma3:12b-cloud
+      - gemma3:4b-cloud
+      - gemma4:31b-cloud
+      - mistral-large-3:675b-cloud
+      - kimi-k2:1t-cloud
+      - kimi-k2-thinking:cloud
+      - minimax-m2.1:cloud
+      - deepseek-v3.2:cloud
+      - deepseek-v4-flash:cloud
+      - glm-4.6:cloud
+      - minimax-m2:cloud
+      - cogito-2.1:671b-cloud
+      - glm-4.7:cloud
+      - gemini-3-flash-preview:cloud
+      - devstral-small-2:24b-cloud
+      - nemotron-3-nano:30b-cloud
+      - nemotron-3-super:cloud
+      - qwen3-next:80b-cloud
+      - rnj-1:8b-cloud
+      - ministral-3:14b-cloud
+      - ministral-3:8b-cloud
+      - ministral-3:3b-cloud
+      - qwen3-vl:235b-instruct-cloud
+      - qwen3-vl:235b-cloud
+      - qwen3.5:397b-cloud
+      - kimi-k2.5:cloud
+      - kimi-k2.6:cloud
+      - minimax-m2.5:cloud
+      - minimax-m2.7:cloud
+      - glm-5:cloud
+      - glm-5.1:cloud
+      - qwen3-coder-next:cloud
+
+  # Raw model_list entries appended to the auto-generated config.
+  # Use this to register models from other providers (OpenAI, Anthropic, Vertex,
+  # local Ollama servers, etc.). Format is YAML matching LiteLLM's model_list
+  # schema, WITHOUT the leading "model_list:" header.
   #
-  # To add a model, append a new entry following the same pattern.
-  # To remove models, delete their entries.
-  # To override entirely, set this key in your own values file:
-  #   litellm:
-  #     config: |
-  #       model_list:
-  #         - model_name: my-model
-  #           litellm_params:
-  #             model: ollama_chat/my-model-id
-  #             api_base: https://ollama.com
-  #             api_key: os.environ/OLLAMA_API_KEY
-  config: |
-    model_list:
-      - model_name: deepseek-v3.1:671b-cloud
-        litellm_params:
-          model: ollama_chat/deepseek-v3.1:671b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3-coder:480b-cloud
-        litellm_params:
-          model: ollama_chat/qwen3-coder:480b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gpt-oss:120b-cloud
-        litellm_params:
-          model: ollama_chat/gpt-oss:120b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gpt-oss:20b-cloud
-        litellm_params:
-          model: ollama_chat/gpt-oss:20b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gemma3:27b-cloud
-        litellm_params:
-          model: ollama_chat/gemma3:27b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gemma3:12b-cloud
-        litellm_params:
-          model: ollama_chat/gemma3:12b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gemma3:4b-cloud
-        litellm_params:
-          model: ollama_chat/gemma3:4b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gemma4:31b-cloud
-        litellm_params:
-          model: ollama_chat/gemma4:31b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: mistral-large-3:675b-cloud
-        litellm_params:
-          model: ollama_chat/mistral-large-3:675b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: kimi-k2:1t-cloud
-        litellm_params:
-          model: ollama_chat/kimi-k2:1t-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: kimi-k2-thinking:cloud
-        litellm_params:
-          model: ollama_chat/kimi-k2-thinking:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: minimax-m2.1:cloud
-        litellm_params:
-          model: ollama_chat/minimax-m2.1:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: deepseek-v3.2:cloud
-        litellm_params:
-          model: ollama_chat/deepseek-v3.2:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: deepseek-v4-flash:cloud
-        litellm_params:
-          model: ollama_chat/deepseek-v4-flash:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: glm-4.6:cloud
-        litellm_params:
-          model: ollama_chat/glm-4.6:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: minimax-m2:cloud
-        litellm_params:
-          model: ollama_chat/minimax-m2:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: cogito-2.1:671b-cloud
-        litellm_params:
-          model: ollama_chat/cogito-2.1:671b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: glm-4.7:cloud
-        litellm_params:
-          model: ollama_chat/glm-4.7:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: gemini-3-flash-preview:cloud
-        litellm_params:
-          model: ollama_chat/gemini-3-flash-preview:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: devstral-small-2:24b-cloud
-        litellm_params:
-          model: ollama_chat/devstral-small-2:24b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: nemotron-3-nano:30b-cloud
-        litellm_params:
-          model: ollama_chat/nemotron-3-nano:30b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: nemotron-3-super:cloud
-        litellm_params:
-          model: ollama_chat/nemotron-3-super:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3-next:80b-cloud
-        litellm_params:
-          model: ollama_chat/qwen3-next:80b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: rnj-1:8b-cloud
-        litellm_params:
-          model: ollama_chat/rnj-1:8b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: ministral-3:14b-cloud
-        litellm_params:
-          model: ollama_chat/ministral-3:14b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: ministral-3:8b-cloud
-        litellm_params:
-          model: ollama_chat/ministral-3:8b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: ministral-3:3b-cloud
-        litellm_params:
-          model: ollama_chat/ministral-3:3b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3-vl:235b-instruct-cloud
-        litellm_params:
-          model: ollama_chat/qwen3-vl:235b-instruct-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3-vl:235b-cloud
-        litellm_params:
-          model: ollama_chat/qwen3-vl:235b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3.5:397b-cloud
-        litellm_params:
-          model: ollama_chat/qwen3.5:397b-cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: kimi-k2.5:cloud
-        litellm_params:
-          model: ollama_chat/kimi-k2.5:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: kimi-k2.6:cloud
-        litellm_params:
-          model: ollama_chat/kimi-k2.6:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: minimax-m2.5:cloud
-        litellm_params:
-          model: ollama_chat/minimax-m2.5:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: minimax-m2.7:cloud
-        litellm_params:
-          model: ollama_chat/minimax-m2.7:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: glm-5:cloud
-        litellm_params:
-          model: ollama_chat/glm-5:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: glm-5.1:cloud
-        litellm_params:
-          model: ollama_chat/glm-5.1:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
-      - model_name: qwen3-coder-next:cloud
-        litellm_params:
-          model: ollama_chat/qwen3-coder-next:cloud
-          api_base: https://ollama.com
-          api_key: os.environ/OLLAMA_API_KEY
+  # Example:
+  #   extraModels: |
+  #     - model_name: gpt-4o
+  #       litellm_params:
+  #         model: openai/gpt-4o
+  #         api_key: os.environ/OPENAI_API_KEY
+  #     - model_name: claude-opus
+  #       litellm_params:
+  #         model: anthropic/claude-opus-4-7
+  #         api_key: os.environ/ANTHROPIC_API_KEY
+  #
+  # Pair with `extraEnv` above to inject the matching API key env vars.
+  extraModels: ""
 
 # ─── n8n ─────────────────────────────────────────────────────────────────────
 # n8n is a visual workflow automation tool (similar to Zapier / Make).

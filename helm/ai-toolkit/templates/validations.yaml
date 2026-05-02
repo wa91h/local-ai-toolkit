@@ -7,6 +7,12 @@ Partial files (prefixed with "_") are NOT rendered, so guards must live in a
 regular template file like this one.
 */ -}}
 
+{{- if and .Values.litellm.enabled .Values.litellm.ollamaCloud.enabled -}}
+  {{- if not .Values.litellm.ollamaCloud.apiKey -}}
+    {{- fail "\n\nlitellm.ollamaCloud.enabled=true requires litellm.ollamaCloud.apiKey to be set.\nGet a key from https://ollama.com → Account → API Keys, then either:\n  - pass --set litellm.ollamaCloud.apiKey=<key> on the helm command, OR\n  - put it in your values file under litellm.ollamaCloud.apiKey\nIf you don't want to use Ollama Cloud, set litellm.ollamaCloud.enabled=false.\n" -}}
+  {{- end -}}
+{{- end -}}
+
 {{- if and .Values.n8n.enabled .Values.n8n.queueMode.enabled -}}
   {{- if and (not .Values.redis.enabled) (not .Values.externalRedis.host) -}}
     {{- fail "\n\nn8n.queueMode.enabled=true requires a Redis backend.\nEither:\n  - set redis.enabled=true to deploy the bundled Redis, OR\n  - set externalRedis.host (and externalRedis.port / externalRedis.password as needed) to point at an existing Redis instance.\n" -}}

@@ -38,11 +38,13 @@ spec:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: litellm-salt-key
+            {{- if .Values.litellm.ollamaCloud.enabled }}
             - name: OLLAMA_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: ollama-api-key
+            {{- end }}
             - name: STORE_MODEL_IN_DB
               value: "True"
             - name: POSTGRES_PASSWORD
