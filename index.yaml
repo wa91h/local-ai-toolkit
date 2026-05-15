@@ -3,6 +3,35 @@ entries:
   ai-toolkit:
   - annotations:
       artifacthub.io/changes: |
+        - kind: removed
+          description: "Breaking — Ollama Cloud integration (litellm.ollamaCloud.*) and its validation guard; revert of the 0.2.0 addition"
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.3.0
+    created: "2026-05-15T11:02:39.589120038Z"
+    description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open
+      WebUI backed by PostgreSQL
+    digest: 0d87e6a2b3bbda92e097eadcc3d14a60141410a6ca4d0cbbc31885c294127ab8
+    home: https://github.com/wa91h/local-ai-toolkit
+    keywords:
+    - ai
+    - llm
+    - litellm
+    - n8n
+    - openwebui
+    maintainers:
+    - email: w.ourimi@gmail.com
+      name: wa91h
+      url: https://github.com/wa91h
+    name: ai-toolkit
+    sources:
+    - https://github.com/wa91h/local-ai-toolkit
+    type: application
+    urls:
+    - https://github.com/wa91h/local-ai-toolkit/releases/download/0.3.0/ai-toolkit-0.3.0.tgz
+    version: 0.3.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: added
           description: extraEnv support for n8n, LiteLLM, and Open WebUI containers
         - kind: added
@@ -335,4 +364,4 @@ entries:
     urls:
     - https://github.com/wa91h/local-ai-toolkit/releases/download/0.1.0/ai-toolkit-0.1.0.tgz
     version: 0.1.0
-generated: "2026-04-28T10:59:52.161292985Z"
+generated: "2026-05-15T11:02:39.589194157Z"
