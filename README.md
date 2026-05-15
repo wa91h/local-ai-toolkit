@@ -2,7 +2,7 @@
 
 A self-hosted AI stack bundling an LLM gateway, workflow automation, and a chat UI — all backed by a shared PostgreSQL database. Deployable locally with Docker Compose or on any Kubernetes cluster via Helm.
 
-All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the box. Create an Ollama account, generate an API key, and you're ready to go.
+LiteLLM ships with no models — register the providers you want in the LiteLLM admin UI, then use them from Open WebUI.
 
 > **⚠️ Warning:** This project is not production-ready out of the box. It has no TLS, no authentication proxy, no secrets management, and no backup strategy. It is safe for local use and trusted internal networks. See [Production Checklist](#production-checklist) before exposing it to the internet or running it with real data.
 
@@ -27,17 +27,21 @@ All free [Ollama Cloud](https://ollama.com) models are pre-configured out of the
                      ▼                 ▼
               ┌────────────┐    ┌────────────┐
               │  LiteLLM   │───▶│ PostgreSQL │
-              └─────┬──────┘    └────────────┘
-                    │
-              Ollama Cloud
-              (37+ models)
+              └────────────┘    └────────────┘
 ```
 
-Services communicate internally by container/pod name. Open WebUI is pre-wired to LiteLLM — no manual configuration needed.
+Services communicate internally by container/pod name.
+
+### Open WebUI ↔ LiteLLM
+
+Open WebUI is wired to LiteLLM over its OpenAI-compatible API. The stack injects
+**only the host — never an API key**. On first login, open the LiteLLM UI at
+`http://localhost:4000/ui`, create a **virtual key**, and paste it into Open
+WebUI under **Settings → Connections**. The `LITELLM_MASTER_KEY` is
+intentionally never given to Open WebUI — use a scoped virtual key instead.
 
 ## Prerequisites
 
-- An [Ollama Cloud](https://ollama.com) account and API key
 - **Docker Compose:** Docker Engine + Docker Compose plugin
 - **Kubernetes:** a running cluster + [Helm 3](https://helm.sh/docs/intro/install/)
 
@@ -64,7 +68,6 @@ POSTGRES_PASSWORD=<your_secure_password>
 
 LITELLM_MASTER_KEY=sk-<generate_a_key>
 LITELLM_SALT_KEY=sk-<generate_a_key>
-OLLAMA_API_KEY=<your_ollama_api_key>
 
 TZ=America/New_York   # IANA timezone
 ```
@@ -105,7 +108,6 @@ helm install ai-toolkit ./helm/ai-toolkit \
   --namespace ai-toolkit --create-namespace \
   --set litellm.masterKey=sk-... \
   --set litellm.saltKey=sk-... \
-  --set litellm.ollamaApiKey=... \
   --set postgresql.auth.password=...
 ```
 
@@ -115,7 +117,6 @@ For repeatable installs, use a values file instead of `--set` flags:
 litellm:
   masterKey: sk-...
   saltKey: sk-...
-  ollamaApiKey: ...
 
 postgresql:
   auth:
@@ -195,7 +196,7 @@ helm uninstall ai-toolkit
 ├── docker-compose.yml            # Docker Compose stack definition
 ├── .env.dist                     # Environment variables template
 ├── config/
-│   ├── litellm_config.yaml       # LiteLLM model registry (37 Ollama Cloud models)
+│   ├── litellm_config.yaml       # LiteLLM model registry (empty by default)
 │   └── init_db.sh                # Creates n8n & litellm databases on first run
 ├── helm/
 │   └── ai-toolkit/               # Helm chart for Kubernetes
@@ -209,39 +210,31 @@ helm uninstall ai-toolkit
 
 ## Models
 
-37 Ollama Cloud models are pre-configured across 9 providers — no local GPU required.
-
-| Provider | Models |
-|---|---|
-| DeepSeek | V3.1, V3.2, V4 Flash |
-| Alibaba / Qwen | Qwen3 Coder, Qwen3 Next, Qwen3 VL, Qwen3.5, Qwen3 Coder Next |
-| Google | Gemma 3 (4B / 12B / 27B), Gemma 4, Gemini 3 Flash |
-| OpenAI | GPT-OSS (20B / 120B) |
-| Mistral | Mistral Large 3, Devstral Small 2, Ministral 3 (3B / 8B / 14B) |
-| Moonshot AI / Kimi | Kimi K2, K2 Thinking, K2.5, K2.6 |
-| MiniMax | M2, M2.1, M2.5, M2.7 |
-| Zhipu AI / Z.ai | GLM 4.6, 4.7, 5, 5.1 |
-| NVIDIA | Nemotron 3 Nano, Nemotron 3 Super |
-| Cogito | Cogito 2.1 |
-| Essential AI | RNJ-1 |
-
-See **[models.md](models.md)** for the full list with sizes and descriptions.
+LiteLLM ships with **no models** pre-configured — register the providers you
+want yourself. Any OpenAI-compatible or LiteLLM-supported provider works
+(OpenAI, Anthropic, Vertex, Groq, a local model server, …). See *Adding models
+to LiteLLM* below.
 
 ---
 
 ## Configuration
 
-### Adding or updating models
+### Adding models to LiteLLM
 
-Append to `config/litellm_config.yaml` (Docker Compose) or override `litellm.config` in your Helm values:
+LiteLLM ships with an empty model registry. Add models in
+`config/litellm_config.yaml` (Docker Compose) or via `litellm.extraModels`
+in your Helm values:
 
 ```yaml
-- model_name: my-model
+- model_name: gpt-4o
   litellm_params:
-    model: ollama_chat/<model-id>
-    api_base: https://ollama.com
-    api_key: os.environ/OLLAMA_API_KEY
+    model: openai/gpt-4o
+    api_key: os.environ/OPENAI_API_KEY
 ```
+
+Pair any provider key with `litellm.extraEnv` (Helm) or the `litellm` service
+environment (Docker Compose). You can also add models at runtime in the
+LiteLLM UI — `STORE_MODEL_IN_DB` persists them to Postgres.
 
 Docker Compose: `docker compose restart litellm`
 Kubernetes: `helm upgrade ai-toolkit ./helm/ai-toolkit -f my-values.yaml`
@@ -293,7 +286,10 @@ docker compose logs -f postgres
 ```
 
 **Open WebUI shows no models**
-Verify LiteLLM is healthy (`docker compose ps`) and that `OLLAMA_API_KEY` is set correctly in `.env`:
+Open WebUI ships with the LiteLLM *host* wired in but **no API key** — add a
+LiteLLM virtual key (from `http://localhost:4000/ui`) under **Settings →
+Connections**. LiteLLM itself serves no models until you register them (see
+*Adding models to LiteLLM* above):
 ```bash
 docker compose logs -f litellm
 ```

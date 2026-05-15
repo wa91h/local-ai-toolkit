@@ -27,13 +27,14 @@ spec:
               containerPort: 8080
               protocol: TCP
           env:
+            # Direct connection to LiteLLM (OpenAI-compatible). Only the host is
+            # wired in — no API key. Create a LiteLLM virtual key in the LiteLLM
+            # UI (/ui) and add it under Open WebUI → Settings → Connections.
+            # The LiteLLM master key is intentionally never injected here.
+            - name: ENABLE_OPENAI_API
+              value: "true"
             - name: OPENAI_API_BASE_URL
               value: "http://{{ include "ai-toolkit.fullname" . }}-litellm:{{ .Values.litellm.service.port }}"
-            - name: OPENAI_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "ai-toolkit.secretName" . }}
-                  key: litellm-master-key
             {{- with .Values.openwebui.extraEnv }}
             {{- toYaml . | nindent 12 }}
             {{- end }}

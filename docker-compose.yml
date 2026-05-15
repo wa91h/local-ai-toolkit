@@ -38,7 +38,6 @@ services:
     environment:
       - LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}
       - LITELLM_SALT_KEY=${LITELLM_SALT_KEY}
-      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
       - STORE_MODEL_IN_DB=True
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/litellm
     volumes:
@@ -108,8 +107,12 @@ services:
     ports:
       - "3000:8080"
     environment:
+      # Direct connection to LiteLLM (OpenAI-compatible). Only the host is wired
+      # in — no API key. Create a LiteLLM virtual key in the LiteLLM UI
+      # (http://localhost:4000/ui) and add it under Open WebUI → Settings →
+      # Connections. The LiteLLM master key is intentionally never used here.
+      - ENABLE_OPENAI_API=true
       - OPENAI_API_BASE_URL=http://litellm:4000
-      - OPENAI_API_KEY=${LITELLM_MASTER_KEY}
     volumes:
       - openwebui-data:/app/backend/data
     networks:

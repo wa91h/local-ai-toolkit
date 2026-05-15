@@ -32,7 +32,7 @@ README and inline comments are in plain Markdown. Keep the troubleshooting secti
 ## Pull Request Guidelines
 
 - Keep PRs focused — one change per PR
-- For new model additions, include the model name and provider in the PR title (e.g. `feat: add gemma3:27b via Ollama Cloud`)
+- For new model additions, include the model name and provider in the PR title (e.g. `feat: add gpt-4o via OpenAI`)
 - Update the [CHANGELOG](CHANGELOG.md) under `Unreleased`
 
 ## Reporting Issues

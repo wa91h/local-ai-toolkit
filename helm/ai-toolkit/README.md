@@ -15,7 +15,6 @@ A Helm chart for the **AI Local Toolkit** — a self-hosted AI stack bundling an
 
 - Kubernetes 1.21+
 - Helm 3.8+
-- An [Ollama Cloud](https://ollama.com) account and API key
 
 ## Installing the chart
 
@@ -24,7 +23,6 @@ helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit \
   --namespace ai-toolkit --create-namespace \
   --set litellm.masterKey=sk-... \
   --set litellm.saltKey=sk-... \
-  --set litellm.ollamaApiKey=... \
   --set postgresql.auth.password=...
 ```
 
@@ -53,8 +51,8 @@ helm install ai-toolkit oci://ghcr.io/wa91h/charts/ai-toolkit \
 |---|---|---|
 | `litellm.masterKey` | LiteLLM master API key (required) | `""` |
 | `litellm.saltKey` | LiteLLM salt key for hashing (required) | `""` |
-| `litellm.ollamaApiKey` | Ollama Cloud API key (required) | `""` |
-| `litellm.replicaCount` | Number of replicas | `1` |
+| `litellm.extraModels` | Raw `model_list` YAML appended to the LiteLLM config | `""` |
+| `litellm.extraEnv` | Extra env vars for the LiteLLM container (e.g. provider API keys) | `[]` |
 | `litellm.image.tag` | Image tag | `main-stable` |
 | `litellm.resources` | CPU/memory resource requests and limits | see values.yaml |
 | `litellm.service.port` | Service port | `4000` |
@@ -158,7 +156,8 @@ helm uninstall ai-toolkit
 
 ## Models
 
-37 Ollama Cloud models are pre-configured across 10 providers (DeepSeek, Qwen, Google, OpenAI, Mistral, Kimi, MiniMax, GLM, NVIDIA, Cogito). See the [full model list](https://github.com/wa91h/local-ai-toolkit/blob/main/models.md).
+The chart ships no LiteLLM models. Register the providers you want via
+`litellm.extraModels`, or at runtime in the LiteLLM UI.
 
 ## Source
 

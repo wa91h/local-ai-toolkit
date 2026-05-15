@@ -13,7 +13,6 @@ keywords:
   - litellm
   - n8n
   - openwebui
-  - ollama
 maintainers:
   - name: wa91h
     email: w.ourimi@gmail.com
@@ -24,10 +23,8 @@ annotations:
     - kind: added
       description: n8n queue mode with bundled Redis or externalRedis, plus dedicated worker Deployment
     - kind: added
-      description: Optional Ollama Cloud model catalog via litellm.ollamaCloud.{enabled,apiKey,models}
+      description: litellm.extraModels for registering models in model_list
     - kind: added
-      description: litellm.extraModels for registering non-Ollama providers in model_list
-    - kind: added
-      description: Pre-flight validation guards for Redis backend and Ollama Cloud API key
+      description: Pre-flight validation guards for the Redis backend
     - kind: changed
-      description: "Breaking — replaced litellm.ollamaApiKey with litellm.ollamaCloud.apiKey, and litellm.config with structured ollamaCloud.models + extraModels"
+      description: "Breaking — replaced litellm.config with the structured litellm.extraModels value"

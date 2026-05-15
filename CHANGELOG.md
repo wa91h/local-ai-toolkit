@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+- LiteLLM now ships with an empty model registry — no models are pre-configured. Register the providers you want in `config/litellm_config.yaml` or the LiteLLM UI.
+
 ## [0.1.3] - 2026-04-26
 
 ### Added
@@ -19,18 +22,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [0.1.2] - 2026-04-24
 
 ### Added
-- Ollama Cloud models: `gemma4`, `glm-5.1`, `kimi-k2.6`, `deepseek-v4-flash`
+- Additional model catalog entries
 
 ## [0.1.1] - 2026-03-24
 
 ### Added
-- Ollama Cloud models: `minimax-m2.5`, `nemotron-3-super`
+- Additional model catalog entries
 
 ## [0.1.0] - 2026-02-25
 
 ### Added
 - Initial stack: LiteLLM, n8n, Open WebUI, PostgreSQL via Docker Compose
-- ~35 pre-configured Ollama Cloud models (DeepSeek, Qwen3, Gemma3, Mistral, Kimi-K2, and more)
+- Pre-configured model catalog
 - Shared PostgreSQL instance with automatic database initialization (`init_db.sh`)
 - External `ai-toolkit` Docker network for inter-container communication
 - JSON log rotation (`max-size: 5m`) on all services
