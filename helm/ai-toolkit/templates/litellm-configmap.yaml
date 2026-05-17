@@ -12,4 +12,7 @@ data:
       {{- . | nindent 6 }}
       {{- else }} []
       {{- end }}
+    general_settings:
+      store_model_in_db: true       # Logs model name in spend/activity logs
+      store_prompts_in_spend_logs: true # Saves prompt text for debugging
 {{- end }}

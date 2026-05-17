@@ -38,8 +38,6 @@ spec:
                 secretKeyRef:
                   name: {{ include "ai-toolkit.secretName" . }}
                   key: litellm-salt-key
-            - name: STORE_MODEL_IN_DB
-              value: "True"
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
