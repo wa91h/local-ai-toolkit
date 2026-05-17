@@ -10,4 +10,9 @@
 #     litellm_params:
 #       model: openai/gpt-4o
 #       api_key: os.environ/OPENAI_API_KEY
+
+general_settings:
+  store_model_in_db: true       # Logs model name in spend/activity logs
+  store_prompts_in_spend_logs: true # Saves prompt text for debugging
+
 model_list: []
