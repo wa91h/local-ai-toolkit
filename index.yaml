@@ -3,6 +3,37 @@ entries:
   ai-toolkit:
   - annotations:
       artifacthub.io/changes: |
+        - kind: changed
+          description: "LiteLLM general_settings now live in the configmap; store_model_in_db moved out of the STORE_MODEL_IN_DB env var"
+        - kind: added
+          description: "Enabled store_prompts_in_spend_logs so LiteLLM spend logs include prompt text for debugging"
+      artifacthub.io/license: MIT
+    apiVersion: v2
+    appVersion: 0.4.0
+    created: "2026-05-17T23:36:16.788191302Z"
+    description: Self-hosted AI stack — LiteLLM gateway, n8n automation, and Open
+      WebUI backed by PostgreSQL
+    digest: a2e9aad1c436ad3542e99d49c4ef8f9762096ceba9e92235a730cdfde6776c36
+    home: https://github.com/wa91h/local-ai-toolkit
+    keywords:
+    - ai
+    - llm
+    - litellm
+    - n8n
+    - openwebui
+    maintainers:
+    - email: w.ourimi@gmail.com
+      name: wa91h
+      url: https://github.com/wa91h
+    name: ai-toolkit
+    sources:
+    - https://github.com/wa91h/local-ai-toolkit
+    type: application
+    urls:
+    - https://github.com/wa91h/local-ai-toolkit/releases/download/0.4.0/ai-toolkit-0.4.0.tgz
+    version: 0.4.0
+  - annotations:
+      artifacthub.io/changes: |
         - kind: removed
           description: "Breaking — Ollama Cloud integration (litellm.ollamaCloud.*) and its validation guard; revert of the 0.2.0 addition"
       artifacthub.io/license: MIT
@@ -364,4 +395,4 @@ entries:
     urls:
     - https://github.com/wa91h/local-ai-toolkit/releases/download/0.1.0/ai-toolkit-0.1.0.tgz
     version: 0.1.0
-generated: "2026-05-15T11:02:39.589194157Z"
+generated: "2026-05-17T23:36:16.788360508Z"
